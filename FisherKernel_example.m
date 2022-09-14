@@ -9,7 +9,7 @@
 % Christine Ahrends, Aarhus University (2022)
 
 %% set paths for data, scripts and dependencies
-projectdir = '/projects/MINDLAB2021_COMP-DecodingTempGenMat';
+projectdir = '/projects/FisherKernel';
 scriptdir = [projectdir '/scripts/Kernel/FK_github'];
 hmm_scriptdir = [projectdir '/scripts/HMM-MAR-master'];
 datadir = [projectdir '/scratch/Kernel/data'];
