@@ -7,6 +7,7 @@ Code to construct Fisher Kernels from HMMs obtained from the HMM-MAR toolbox (ht
 See FisherKernel_example.m for examples. Script includes examples for Gaussian HMM and TDE-HMM, using the Fisher kernel in a SVM and in kernel ridge regression. 
 
 List of functions:
+
 ./main contains main functions for Fisher Kernel: hmm_kernel.m constructs a kernel (e.g. Fisher kernel) and the corresponding feature matrix from an HMM, hmm_gradient.m only computes the feature matrix (e.g. Fisher score/gradient).
 
 ./utils contains helper functions, namely hmmdual_FK.m for dual estimation to work for Fisher kernel construction (within hmm_gradient.m and hmm_kernel.m) and transform_dataHMM.m which can be used to check the embedding used in the HMM and the features or kernel
