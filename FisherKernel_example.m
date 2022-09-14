@@ -10,12 +10,12 @@
 
 %% set paths for data, scripts and dependencies
 projectdir = '/projects/FisherKernel';
-scriptdir = [projectdir '/scripts/Kernel/FK_github'];
+scriptdir = [projectdir '/scripts/FisherKernel'];
 hmm_scriptdir = [projectdir '/scripts/HMM-MAR-master'];
 datadir = [projectdir '/scratch/Kernel/data'];
 
 cd(projectdir)
-addpath(scriptdir)
+addpath(genpath(scriptdir))
 addpath(genpath(hmm_scriptdir));
 
 %% load data (X: timecourses, Y: behavioural variable to be predicted)
