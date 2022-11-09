@@ -121,7 +121,7 @@ if isempty(Xi)
 end
 setxx;
 
-hmm = obsupdate(T,Gamma,hmm,residuals,XX,XXGXX);
+hmm = obsupdate(Gamma,hmm,residuals,XX,XXGXX);
 hmm = hsupdate(Xi,Gamma,T,hmm);
 
 % if nargout > 1
