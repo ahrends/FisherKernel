@@ -148,7 +148,7 @@ if nargout > 1 && strcmp(type,'gradient')
     if include_sigma && strcmpi(hmm.train.distribution, 'Gaussian')
         feat = [feat; -dSigma(:)];
     end
-elseif nargout > 1 && strcmp(type, 'vectorised') %if gradient was not requested, vectorise parameters from dual estimation instead (to construct naive kernel)
+elseif nargout > 1 && (strcmp(type, 'vectorised') || strcmp(type, 'vectorised_norm'))%if gradient was not requested, vectorise parameters from dual estimation instead (to construct naive kernel)
     feat = [];
     if include_Pi
         feat = [feat; hmm_sub.Pi(:)];
@@ -156,21 +156,22 @@ elseif nargout > 1 && strcmp(type, 'vectorised') %if gradient was not requested,
     if include_P
         feat = [feat; hmm_sub.P(:)];
     end
-    if include_mu || include_sigma
+    if include_mu
         mu_sub = zeros(N,K);
         for k = 1:K
             mu_sub(:,k) = getMean(hmm_sub,k,false);
         end
+        feat = [feat; mu_sub(:)];
+    end
+    if include_sigma && strcmpi(hmm_sub.train.distribution, 'Gaussian')
         sigma_sub = zeros(N,N,K);
         for k = 1:K
             sigma_sub(:,:,k) = getFuncConn(hmm_sub,k,false);
         end
-        if include_mu
-            feat = [feat; mu_sub(:)];
-        end
-        if include_sigma && strcmpi(hmm_sub.train.distribution, 'Gaussian')
-            feat = [feat; sigma_sub(:)];                
-        end
+        feat = [feat; sigma_sub(:)];
+    end
+    if strcmp(type, 'vectorised_norm')
+        feat = (feat-mean(feat,1))./std(feat,1);
     end
 end
 end
