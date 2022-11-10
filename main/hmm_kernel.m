@@ -1,5 +1,5 @@
-function [K, feat] = hmm_kernel(X_all, hmm, options)
-% [K, feat] = hmm_kernel(X_all, hmm, options)
+function [K, feat, Dist] = hmm_kernel(X_all, hmm, options)
+% [K, feat, Dist] = hmm_kernel(X_all, hmm, options)
 %
 % hmm_kernel computes a kernel and feature matrix from HMMs
 % implemented for linear and Gaussian versions of Fisher kernel & naive
@@ -83,10 +83,10 @@ elseif strcmpi(kernel, 'Gaussian')
     % get norm of feature vectors
     for i =1:S
         for j = 1:S
-            grad_dist(i,j) = sqrt(sum(abs(feat(i,:)-feat(j,:)).^2)).^2;
+            Dist(i,j) = sqrt(sum(abs(feat(i,:)-feat(j,:)).^2)).^2;
         end
     end
-    K = exp(-grad_dist/(2*tau^2));
+    K = exp(-Dist/(2*tau^2));
 end
 
 end

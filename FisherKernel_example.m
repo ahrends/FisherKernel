@@ -76,8 +76,9 @@ K_options.normalisation = 'L2-norm'; % only here for visualisation, drop this wh
 K_options.kernel = 'Gaussian';
 K_options.tau = 100; % estimate tau in CV
 
-[FKg, feat] = hmm_kernel(X, HMM1.hmm, K_options);
+[FKg, feat, Dist] = hmm_kernel(X, HMM1.hmm, K_options);
 % FKg is the Gaussian version of the Fisher Kernel
+% Dist is the distance matrix
 % figure; subplot(1,2,1); imagesc(feat); title('Gradient features (normalised)'); 
 % xlabel('Features'); ylabel('Subjects'); colorbar; 
 % subplot(1,2,2); imagesc(FKg); title('Gaussian Fisher Kernel (normalised)'); 
@@ -129,8 +130,9 @@ K_options.normalisation = 'L2-norm'; % only here for visualisation, drop this wh
 K_options.kernel = 'Gaussian';
 K_options.tau = 100; % estimate tau in CV
 
-[FKg2, feat2] = hmm_kernel(X, HMM2.hmm, K_options);
+[FKg2, feat2, Dist2] = hmm_kernel(X, HMM2.hmm, K_options);
 % FKg is the Gaussian version of the Fisher Kernel
+% Dist is the distance matrix
 % figure; subplot(1,2,1); imagesc(feat2); title('Gradient features (normalised)'); 
 % xlabel('Features'); ylabel('Subjects'); colorbar; 
 % subplot(1,2,2); imagesc(FKg2); title('Gaussian Fisher Kernel (normalised)'); 
