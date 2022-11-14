@@ -12,8 +12,8 @@ function [predictedY,predictedYD,YD,stats] = predictPhenotype_kernels(Yin,Din,op
 % Din       (no. subjects by no. subjects) matrix of either distances between
 %           subjects, calculated (for example) by computeDistMatrix or
 %           computeDistMatrix_AVFC (in which case, options.kernel should be
-%           'gaussian' or pre-computed kernel, in which case options.kernel
-%           should be 'linear';
+%           'gaussian') or pre-computed kernel (in which case options.kernel
+%           should be 'linear')
 % options   Struct with the prediction options, with fields:
 %   + alpha - for method='KRR', a vector of weights on the L2 penalty on the regression
 %           By default: [0.0001 0.001 0.01 0.1 0.4 0.7 1.0 10 100]
