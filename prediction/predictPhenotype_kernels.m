@@ -12,8 +12,8 @@ function [predictedY,predictedYD,YD,stats] = predictPhenotype_kernels(Yin,Din,op
 % Din       (no. subjects by no. subjects) matrix of either distances between
 %           subjects, calculated (for example) by computeDistMatrix or
 %           computeDistMatrix_AVFC (in which case, options.kernel should be
-%           'gaussian') or pre-computed kernel (in which case options.kernel
-%           should be 'linear')
+%           'gaussian' or pre-computed kernel, in which case options.kernel
+%           should be 'linear';
 % options   Struct with the prediction options, with fields:
 %   + alpha - for method='KRR', a vector of weights on the L2 penalty on the regression
 %           By default: [0.0001 0.001 0.01 0.1 0.4 0.7 1.0 10 100]
@@ -54,11 +54,15 @@ function [predictedY,predictedYD,YD,stats] = predictPhenotype_kernels(Yin,Din,op
 %
 % Author: Diego Vidaurre, OHBA, University of Oxford
 %         Steve Smith, fMRIB University of Oxford
-%
-% adapted for use with different kernels:
-% Christine Ahrends, Aarhus University 2022
 
-Din(eye(size(Din,1))==1) = 0; 
+if ~isfield(options, 'kernel')
+    kernel = 'linear';
+else
+    kernel = options.kernel;
+end
+if strcmp(kernel, 'gaussian')
+    Din(eye(size(Din,1))==1) = 0; 
+end
 [N,q] = size(Yin);
 
 which_nan = false(N,1); 
@@ -82,11 +86,7 @@ if nargin < 3 || isempty(options), options = struct(); end
 % else
 %     method = 'KRR';
 % end
-if ~isfield(options, 'kernel')
-    kernel = 'linear';
-else
-    kernel = options.kernel;
-end
+
 if ~isfield(options,'alpha')
     alpha = [0.0001 0.001 0.01 0.1 0.4 0.7 1.0 10 100];
 else
@@ -160,9 +160,11 @@ if isempty(CVfolds)
     if CVscheme(1)==1
         folds = {1:N};
     elseif q == 1
+        rng('shuffle');
         Yin_copy = Yin; Yin_copy(isnan(Yin)) = realmax;
         folds = cvfolds_FK(Yin_copy,'gaussian',CVscheme(1),allcs);
     else % no stratification
+        rng('shuffle');
         folds = cvfolds_FK(randn(size(Yin,1),1),'gaussian',CVscheme(1),allcs);
     end
 else
@@ -206,7 +208,7 @@ for ifold = 1:length(folds)
         Yii = Yii(ind,ii); 
         QDin = Dii(ind,ind); 
         QN = length(ind);
-        
+        rng('shuffle')
         Qfolds = cvfolds_FK(Yii,'gaussian',CVscheme(2),Qallcs); % we stratify
 
         % deconfounding business
@@ -239,16 +241,14 @@ for ifold = 1:length(folds)
                 Nji = length(Qji);
                 QD2 = QDin(QJ,Qji);
                 
-                sigmabase = auto_sigma(QD);
-                sigma = sigmf * sigmabase;
-                
                 if strcmp(kernel, 'gaussian')
+                    sigmabase = auto_sigma(QD);
+                    sigma = sigmf * sigmabase;
                     K = gauss_kernel(QD,sigma);
                     K2 = gauss_kernel(QD2,sigma);
                 elseif strcmp(kernel, 'linear')
                     K = QD;
                     K2 = QD2;
-                    sigmf = NaN;
                 end
                 I = eye(Nji);
                 ridg_pen_scale = mean(diag(K));
@@ -267,14 +267,13 @@ for ifold = 1:length(folds)
         
         [~,m] = min(Dev(:)); % Pick the one with the lowest deviance
         [ialph,isigm] = ind2sub(size(Dev),m);
-        sigmf = sigmafact(isigm);
-        sigmabase = auto_sigma(D);
-        sigma = sigmf * sigmabase;
         alph = alpha(ialph);
-        
         Dii = D(ind,ind); D2ii = D2(:,ind);
         
         if strcmp(kernel, 'gaussian')
+            sigmf = sigmafact(isigm);
+            sigmabase = auto_sigma(D);
+            sigma = sigmf * sigmabase;
             K = gauss_kernel(Dii,sigma);
             K2 = gauss_kernel(D2ii,sigma);
         elseif strcmp(kernel, 'linear')
@@ -358,6 +357,7 @@ for ifold = 1:length(folds)
     %disp(['Fold ' num2str(ifold) ])
     stats.alpha(ifold) = alph;
     stats.sigma(ifold) = sigmf;
+    stats.sigma(ifold) = NaN;
 %    stats.beta(ifold,:) = beta;
 end
 
