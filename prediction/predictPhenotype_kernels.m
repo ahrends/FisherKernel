@@ -357,7 +357,7 @@ for ifold = 1:length(folds)
     %disp(['Fold ' num2str(ifold) ])
     stats.alpha(ifold) = alph;
     stats.sigma(ifold) = sigmf;
-    stats.sigma(ifold) = NaN;
+%    stats.sigma(ifold) = NaN;
 %    stats.beta(ifold,:) = beta;
 end
 
