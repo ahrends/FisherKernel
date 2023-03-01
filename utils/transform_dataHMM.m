@@ -1,4 +1,8 @@
 function [data, T] = transform_dataHMM(data, T, options)
+%
+% Helper function to transform data according to embeddings/transformations
+% used in the HMM
+% Christine Ahrends, Aarhus University 2022
 
 if iscell(T)
     if size(T,1)==1, T = T'; end

@@ -54,6 +54,8 @@ function [predictedY,predictedYD,YD,stats] = predictPhenotype_kernels(Yin,Din,op
 %
 % Author: Diego Vidaurre, OHBA, University of Oxford
 %         Steve Smith, fMRIB University of Oxford
+% adapted to different kernels:
+% Christine Ahrends, Aarhus University, 2022
 
 if ~isfield(options, 'kernel')
     kernel = 'linear';
