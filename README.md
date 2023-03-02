@@ -1,6 +1,6 @@
 # Fisher Kernel
 
-Code for Fisher Kernel
+! This is the beta version of the code that has not been fully tested yet !
 
 Code to construct Fisher Kernels from HMMs obtained from the HMM-MAR toolbox (https://github.com/OHBA-analysis/HMM-MAR) to predict phenotypes from models of brain dynamics. 
 
