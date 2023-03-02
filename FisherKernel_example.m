@@ -61,7 +61,7 @@ K_options.Pi = true; % state probabilities
 K_options.P = true; % transition probabilities
 K_options.mu = true; % state means
 K_options.sigma = true; % state covariances
-K_options.type = 'gradient'; % one of 'vectorised', 'vectorised_norm', or 'gradient' (use gradient for Fisher kernel)
+K_options.type = 'Fisher'; % one of 'naive', 'naive_norm', or 'Fisher'
 K_options.kernel = 'linear';
 K_options.normalisation = 'L2-norm'; % only here for visualisation, drop this when running KRR
 
@@ -112,7 +112,7 @@ K_options.Pi = true; % state probabilities
 K_options.P = true; % transition probabilities
 K_options.mu = false; % state means
 K_options.sigma = true; % state covariances
-K_options.type = 'gradient'; % one of 'vectorised', 'vectorised_norm', or 'gradient' (use gradient for Fisher kernel)
+K_options.type = 'Fisher'; % one of 'naive', 'naive_norm', or 'Fisher'
 K_options.kernel = 'linear';
 K_options.normalisation = 'L2-norm'; % only here for visualisation, drop this when running KRR
 
@@ -188,3 +188,5 @@ Xin = feat(index,:);
 [results.predictedY, results.stats] = ...
     krr_predict_FK(Yin,Xin, krr_options, twins(index,index)); %twins is optional family structure (CV set up to randomise folds taking family structure into account)
 disp(['Prediction accuracy (Fisher kernel) is ' num2str(results.stats.corr)])
+
+% use predictPhenotype_kernels instead of krr_predict_FK for deconfounding
