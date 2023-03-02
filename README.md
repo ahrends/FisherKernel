@@ -1,6 +1,6 @@
 # Fisher Kernel
 
-Preliminary code for Fisher Kernel
+Code for Fisher Kernel
 
 Code to construct Fisher Kernels from HMMs obtained from the HMM-MAR toolbox (https://github.com/OHBA-analysis/HMM-MAR) to predict phenotypes from models of brain dynamics. 
 
@@ -12,6 +12,6 @@ List of functions:
 
 ./utils contains helper functions, namely hmmdual_FK.m for dual estimation to work for Fisher kernel construction (within hmm_gradient.m and hmm_kernel.m) and transform_dataHMM.m which can be used to check the embedding used in the HMM and the features or kernel
 
-./prediction contains preliminary functions for prediction models that use the Fisher kernel, for now krr_predict_FK.m, which runs kernel ridge regression using the Fisher kernel. cvfolds_FK.m is used for cross validation in krr_predict_FK.m.
+./prediction contains functions for prediction models that use the Fisher kernel, for now predictPhenotype_kernels.m and krr_predict_FK.m, both run kernel ridge regression using the Fisher kernel. cvfolds_FK.m is used for cross validation in krr_predict_FK.m. predictPhenotype_kernels.m works with deconfounding
 
-Reference: Ahrends & Vidaurre (in prep.) Fisher kernel method to predict phenotypes from models of brain dynamics. 
+Reference: Ahrends & Vidaurre (2023) Predicting individual traits from models of brain dynamics accurately and reliably using the Fisher kernel. biorxiv
