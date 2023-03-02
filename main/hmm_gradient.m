@@ -17,9 +17,9 @@ function [LL,feat] = hmm_gradient(X, hmm, options)
 % + mu:         include state means (only if HMMs were estimated with mean)?
 %               (true or false, default to false)
 % + sigma:      include state covariances? (true or false, default to false)
-% + type:       which type of features to compute, one of either 'gradient'
-%               for Fisher kernel, 'vectorised' for naive kernel, or
-%               'vectorised_norm' for naive normalised kernel
+% + type:       which type of features to compute, one of either 'Fisher'
+%               for Fisher kernel, 'naive' for naive kernel, or
+%               'naive_norm' for naive normalised kernel
 % 
 % OUTPUT:
 % LL:           negative log likelihood
@@ -61,7 +61,7 @@ else
     include_sigma = options.sigma;
 end
 if ~isfield(options, 'type')
-    type = 'gradient';
+    type = 'Fisher';
 else
     type = options.type;
 end
@@ -97,7 +97,7 @@ end
 LL = -sum(LL);
 
 % compute gradient
-if nargout > 1 && strcmp(type,'gradient')
+if nargout > 1 && strcmp(type,'Fisher')
     gamma = gamma_tmp';
     Xi_tmp = squeeze(mean(Xi_tmp,1));
     Xi_tmp = bsxfun(@rdivide, Xi_tmp, max(sum(Xi_tmp,2), realmin));
@@ -148,7 +148,7 @@ if nargout > 1 && strcmp(type,'gradient')
     if include_sigma && strcmpi(hmm.train.distribution, 'Gaussian')
         feat = [feat; -dSigma(:)];
     end
-elseif nargout > 1 && (strcmp(type, 'vectorised') || strcmp(type, 'vectorised_norm'))%if gradient was not requested, vectorise parameters from dual estimation instead (to construct naive kernel)
+elseif nargout > 1 && (strcmp(type, 'naive') || strcmp(type, 'naive_norm'))%if gradient was not requested, vectorise parameters from dual estimation instead (to construct naive kernel)
     feat = [];
     if include_Pi
         feat = [feat; hmm_sub.Pi(:)];
@@ -170,7 +170,7 @@ elseif nargout > 1 && (strcmp(type, 'vectorised') || strcmp(type, 'vectorised_no
         end
         feat = [feat; sigma_sub(:)];
     end
-    if strcmp(type, 'vectorised_norm')
+    if strcmp(type, 'naive_norm')
         feat = (feat-mean(feat,1))./std(feat,1);
     end
 end

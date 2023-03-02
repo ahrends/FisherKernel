@@ -17,22 +17,21 @@ function [K, feat, Dist] = hmm_kernel(X_all, hmm, options)
 % + mu:     include state means (only if HMMs were estimated with mean)?
 %           (true or false, default to false)
 % + sigma:  include state covariances? (true or false, default to false)
-% + type:   which type of features to compute, one of either 'gradient'
-%           for Fisher kernel, 'vectorised' for naive kernel, or
-%           'vectorised_norm' for naive normalised kernel
+% + type:   which type of features to compute, one of either 'Fisher'
+%           for Fisher kernel, 'naive' for naive kernel, or
+%           'naive_norm' for naive normalised kernel
 % + kernel: which kernel to compute, one of either 'linear' or 'Gaussian'
 % + normalisation:
 %           (optional) how to normalise features, e.g. 'L2-norm'
 %
 % OUTPUT:
 % K:        Kernel specified by options.type and options.kernel (matrix 
-%           of size samples x samples), e.g. for options.type='gradient' 
-%           and options.kernel = 'linear', this is the Fisher kernel
+%           of size samples x samples), e.g. for options.type='Fisher' 
+%           and options.kernel = 'linear', this is the linear Fisher kernel
 % feat:     features from which kernel was constructed (matrix of size
-%           samples x features), e.g. for options.type='gradient', this
+%           samples x features), e.g. for options.type='Fisher', this
 %           will be the gradients of the log-likelihood of each subject
 %           w.r.t. to the specified parameters (i.e. Fisher scores),
-%           This can be used as input to krr_predict_FK
 %
 % Christine Ahrends, Aarhus University (2022)
 
