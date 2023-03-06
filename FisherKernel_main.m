@@ -111,22 +111,22 @@ Knames = {'linear', 'gaussian'};
 
 % This will construct the kernels and the features (compute the gradient
 % for Fisher kernel) and run dual estimation (Fisher-compatible version)
-for f=1:3
-    for k=1:2
-        K_options.type = Fnames{f}; % one of 'naive', 'naive_norm', or 'Fisher'
+for Fn=1:3
+    for Kn=1:2
+        K_options.type = Fnames{Fn}; % one of 'naive', 'naive_norm', or 'Fisher'
         % 'naive' will also give the vectorised parameters, 'naive_norm' will also
         % give the normalised vectorised parameters, 'Fisher' will also give the
         % gradient features
-        K_options.kernel = Knames{k};
+        K_options.kernel = Knames{Kn};
 
         if ~isdir(outputdir); mkdir(outputdir); end
         clear Kernel features Dist
-        if k==2
+        if Kn==2
             [Kernel, features, Dist] = hmm_kernel(data_X, HMM.hmm, K_options);
-            save([outputdir '/Kernel_' Fnames{f} '_' Knames{k} '.mat'], 'Kernel', 'features', 'Dist');
+            save([outputdir '/Kernel_' Fnames{Fn} '_' Knames{Kn} '.mat'], 'Kernel', 'features', 'Dist');
         else
             [Kernel, features] = hmm_kernel(data_X, HMM.hmm, K_options);
-            save([outputdir '/Kernel_' Fnames{f} '_' Knames{k} '.mat'], 'Kernel', 'features');
+            save([outputdir '/Kernel_' Fnames{Fn} '_' Knames{Kn} '.mat'], 'Kernel', 'features');
         end
     end
 end
@@ -142,10 +142,9 @@ Dist = computeDistMatrix_AVFC(data_X,T);
 save([outputdir '/Kernel_KLdiv_staticFC.mat'], 'Dist')
 
 %% 3. Run KRR for prediction
-% Do not run
 % set up variables & options for KRR
 N_variables = 35;
-N_iter = 100;
+N_iter = 1; % in the paper, this is set to 100;
 
 krr_params = struct();
 krr_params.deconfounding = 1;
@@ -154,23 +153,23 @@ krr_params.alpha = [0.0001 0.001 0.01 0.1 0.3 0.5 0.7 0.9 1.0];
 krr_params.verbose = 1;
 krr_params.Nperm = 1; % 100 (for permutation-based significance testing)
 
-for f=1:3
-    for k=1:2
+for Fn=1:3
+    for Kn=1:2
         for varN = 1:N_variables
             for iterN = 1:N_iter
-                if ~exist([outputdir '/Predictions_' HMM_version '_' Fnames{f} '_' Knames{k} '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'file')
+                if ~exist([outputdir '/Predictions_' HMM_version '_' Fnames{Fn} '_' Knames{Kn} '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'file')
                     % load kernel (for linear kernel) or
                     % distance/divergence matrix (for Gaussian kernel)
-                    if strcmpi(Fnames{f}, 'KL')
+                    if strcmpi(Fnames{Fn}, 'KL')
                         load([outputdir '/Kernel_KLdiv.mat'], 'Dist'); % load KL divergence matrix
                     else
-                        if strcmpi(Knames{k}, 'linear')
-                            load([outputdir '/Kernel_' Fnames{f} '_' Knames{k} '.mat'], 'Kernel');
+                        if strcmpi(Knames{Kn}, 'linear')
+                            load([outputdir '/Kernel_' Fnames{Fn} '_' Knames{Kn} '.mat'], 'Kernel');
                         elseif strcmpi(kernel, 'gaussian')
-                            load([outputdir '/Kernel_' Fnames{f} '_' Knames{k} '.mat'], 'Dist');
+                            load([outputdir '/Kernel_' Fnames{Fn} '_' Knames{Kn} '.mat'], 'Dist');
                         end
                     end
-                    krr_params.kernel = Knames{k}; %'gaussian','linear';
+                    krr_params.kernel = Knames{Kn}; %'gaussian','linear';
                     results = struct();
                     Yin = Y(:,varN);
                     index = ~isnan(Yin);
@@ -178,9 +177,9 @@ for f=1:3
                     rng('shuffle')
                     % choose input: use Kernel for linear kernel and distance matrix for
                     % Gaussian kernel (to estimate kernel width within KRR CV)
-                    if strcmpi(Knames{k}, 'linear')
+                    if strcmpi(Knames{Kn}, 'linear')
                         Din = Kernel(index,index);
-                    elseif strcmpi(Knames{k}, 'gaussian')
+                    elseif strcmpi(Knames{Kn}, 'gaussian')
                         Din = Dist(index, index);
                     end
                     % disp(['Now running iteration ' num2str(i) ' out of ' num2str(niter) ...
@@ -190,7 +189,7 @@ for f=1:3
                         Din, krr_params, twins(index,index), confounds(index,:)); % twins is the family structure used for CV
     
                     if ~isdir(outputdir); mkdir(outputdir); end
-                    save([outputdir '/Predictions_' HMM_version '_' Fnames{f} '_' Knames{k} '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'results');
+                    save([outputdir '/Predictions_' HMM_version '_' Fnames{Fn} '_' Knames{Kn} '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'results');
                 end
             end
         end
@@ -216,4 +215,51 @@ for varN = 1:N_variables
         save([outputdir '/Predictions_' HMM_version '_staticFCKL_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'results');
     end
 end
+
+%% 4. load and evaluate predictions
+% load all predictions, evaluate correlation between predicted and actual,
+% NRMSE, and NMAXAE, and assemble everything in a table
+
+Fnames = {'naive', 'naive_norm', 'Fisher', 'staticFC'};
+kernel_resultsT = table();
+i= 0;
+for Fn = 1:5
+    for Kn = 1:2
+        for varN = 1:N_variables
+            for iterN = 1:N_iter
+                if ~((Fn>3) && (Kn==1))
+                    if Fn~=5
+                        load([outputdir '/Predictions_' HMM_version '_' Fnames{Fn} '_' Knames{Kn} '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat']);
+                    else
+                        load([outputdir '/Predictions_' HMM_version '_staticFCKL_varN' num2str(varN) 'iterN' num2str(iterN) '.mat']);
+                    end
+                    i = i+1;
+                    % settings for this prediction
+                    kernel_resultsT.features{i} = Fnames{Fn};
+                    kernel_resultsT.kernel{i} = Knames{Kn};
+                    kernel_resultsT.varN(i) = varN;
+                    kernel_resultsT.iterN(i) = iterN;
+                    kernel_resultsT.predictedY{i} = results.predictedY;
+                    % for sanity checks and optimisation, check betas (if
+                    % saved from KRR) and hyperparameters 
+                    kernel_resultsT.beta{i} = results.beta; % beta are the regression weights
+                    kernel_resultsT.lambda{i} = results.stats.alpha; % regularisation parameter is called alpha in predictPhenotype, but lambda in the manuscript
+                    kernel_resultsT.tau{i} = results.stats.sigma; % width of Gaussian kernel (this parameter is irrelevant for linear kernels), 
+                    % note that this is called sigma in predictPhenotype, but tau in the manuscript to avoid confusion with the HMM state covariances
+                    kernel_resultsT.corr(i) = results.stats.corr; % Pearson's r betw. model-predicted and actual
+                    kernel_resultsT.err{i} = kernel_resultsT.predictedY{i} - Y(~isnan(Y(:,varN)),varN);
+                    kernel_resultsT.RMSE(i) = sqrt(mean(kernel_resultsT.err{i})^2);
+                    kernel_resultsT.NRMSE(i) = kernel_resultsT.RMSE(i)/range(Y(:,varN));
+                    kernel_resultsT.MAXAE(i) = max(abs(kernel_resultsT.err{i}(:)));
+                    kernel_resultsT.NMAXAE(i) = kernel_resultsT.MAXAE(i)/range(Y(:,varN));
+                    clear results
+                end
+            end
+        end
+    end
+end
+
+save([outputdir '/kernel_resultsT.mat'], 'kernel_resultsT');
+
+%% 5. Significance tests for differences between kernels
 
