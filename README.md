@@ -14,4 +14,4 @@ List of functions:
 
 ./prediction contains functions for prediction models that use the Fisher kernel, for now predictPhenotype_kernels.m and krr_predict_FK.m, both run kernel ridge regression using the Fisher kernel. cvfolds_FK.m is used for cross validation in krr_predict_FK.m and predictPhenotype_kernels.m. predictPhenotype_kernels.m works with deconfounding
 
-Reference: Ahrends & Vidaurre (2023) Predicting individual traits from models of brain dynamics accurately and reliably using the Fisher kernel. biorxiv
+Reference: Ahrends & Vidaurre (2023) Predicting individual traits from models of brain dynamics accurately and reliably using the Fisher kernel. biorxiv. doi: https://doi.org/10.1101/2023.03.02.530638 
