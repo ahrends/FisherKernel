@@ -198,7 +198,7 @@ end
 
 % (SI: run also for static FC KL divergence)
 load([outputdir '/Kernel_KLdiv_staticFC.mat'], 'Dist');
-krr_params.kernel = 'Gaussian';
+krr_params.kernel = 'gaussian';
 Din = Dist(index, index);
 for varN = 1:N_variables
     for iterN = 1:N_iter
@@ -261,5 +261,172 @@ end
 
 save([outputdir '/kernel_resultsT.mat'], 'kernel_resultsT');
 
-%% 5. Significance tests for differences between kernels
+% robustness: standard deviation over 100 iterations of
+% 10-fold CV for each variable and each kernel
+robustnessT = table();
+all_measures = {'corr', 'NRMSE'};
+j=1;
+for Fn = 1:4
+    for Kn = 1:2
+        for v = 1:varN
+            for m = 1:2
+                features = Fnames{Fn};
+                kernel = Knames{Kn};
+                measure = all_measures{m};
+                if ~((Fn==4) && (Kn==1))
+                    robustnessT.features{j} = features;
+                    robustnessT.kernel{j} = kernel;
+                    robustnessT.measure{j} = measure;
+                    robustnessT.varN(j) = v;
+                    robustnessT.std(j) = std(eval(['kernel_resultsT.' measure ...
+                        '((strcmpi(kernel_resultsT.kernel, kernel)) & (strcmpi(kernel_resultsT.features, features)) & (kernel_resultsT.varN == v))']));
+                    j = j+1;
+                end
+            end
+        end
+    end
+end
 
+save([outputdir '/Kernel_robustnessT.mat'], 'robustnessT')
+
+%% 5. Test for differences between kernels
+% permutation tests for differences in accuracy and robustness
+
+% set up which comparisons to do
+% logical indices for results table
+CN = strcmp(kernel_resultsT.features, 'naive');
+CNN = strcmp(kernel_resultsT.features, 'naive_norm');
+CFK = strcmp(kernel_resultsT.features, 'Fisher');
+CKL = strcmp(kernel_resultsT.features, 'KL');
+Clin = strcmp(kernel_resultsT.kernel, 'linear');
+Cgaus = strcmp(kernel_resultsT.kernel, 'gaussian');
+
+% set up comparisons: each row is a test, mat1 and mat2 are the logical
+% indices to be compared
+% compare Fisher kernel with naive kernel and naive normalised kernel
+% (linear & Gaussian versions collapsed)
+n_comp = 12;
+compsT = table();
+compsT.mat1{1} = CN;
+compsT.mat2{1} = CNN;
+compsT.mat1{2} = CN;
+compsT.mat2{2} = CFK;
+compsT.mat1{3} = CNN;
+compsT.mat2{3} = CFK;
+% compare linear with Gaussian versions of kernels
+compsT.mat1{4} = CN & Clin;
+compsT.mat2{4} = CN & Cgaus;
+compsT.mat1{5} = CNN & Clin;
+compsT.mat2{5} = CNN & Cgaus;
+compsT.mat1{6} = CFK & Clin;
+compsT.mat2{6} = CFK & Cgaus;
+% compare each kernel with KL divergence
+compsT.mat1{7} = CN & Clin;
+compsT.mat1{8} = CN & Cgaus;
+compsT.mat1{9} = CNN & Clin;
+compsT.mat1{10} = CNN & Cgaus;
+compsT.mat1{11} = CFK & Clin;
+compsT.mat1{12} = CFK & Cgaus;
+for iii = 7:12
+    compsT.mat2{iii} = CKL;
+end
+
+design = [ones([1,35]) repmat(2,[1,35])]';
+n_perm = 5000;
+Pvals_acc = zeros(2,n_comp); % row 1 will be correlation, row 2 will be results for NRMSE, columns are the comparisons set up above
+
+% test for significant differences in accuracy (correlation coefficient and
+% NRMSE)
+for ii = 1:n_comp
+    %tic
+    clear mat1 mat2 data
+    for n = 1:varN
+        mat1(n,:) = kernel_resultsT.corr(compsT.mat1{ii} & kernel_resultsT.varN==n)';
+        mat2(n,:) = kernel_resultsT.corr(compsT.mat2{ii} & kernel_resultsT.varN==n)';
+    end
+    data = [mat1; mat2];   
+    Pvals_acc(1,ii) = mean(permtest_aux(data,design,n_perm));
+    clear mat1 mat2 data
+    for n = 1:varN
+        mat1(n,:) = kernel_resultsT.NRMSE(compsT.mat1{ii} & kernel_resultsT.varN==n)';
+        mat2(n,:) = kernel_resultsT.NRMSE(compsT.mat2{ii} & kernel_resultsT.varN==n)';
+    end
+    data = [mat1; mat2];  
+    Pvals_acc(2,ii) = mean(permtest_aux(data,design,n_perm));
+    %toc
+end
+
+% Benjamini-Hochberg corrected p-values:
+for i = 1:2
+    [Pvals_acc_sort(i,:), ind(i,:)] = sort(Pvals_acc(i,:));
+    for j = 1:size(Pvals_acc_sort,2)-1
+        Pvals_acc_BHtmp(i,j) = min(Pvals_acc_sort(i,j)*n_comp,Pvals_acc_sort(i,j+1));
+    end
+    Pvals_acc_BHtmp(i,12) = Pvals_acc_sort(i,j)*n_comp;
+    for j = 1:size(Pvals_acc_sort,2)
+        Pvals_acc_BH(i,ind(i,j)) = Pvals_acc_BHtmp(i,j);
+    end
+end
+
+
+save([outputdir '/Permtests_acc.mat', 'Pvals_acc', 'Pvals_acc_BH');    
+    
+% test for significant differences in robustness of accuracy (standard 
+% deviation of correlation coefficient and NRMSE)
+
+% comparisons are the same as above
+
+design = [ones([1,35]) repmat(2,[1,35])]';
+n_perm = 5000;
+Pvals_rob = zeros(1,n_comp); 
+
+for ii = 1:n_comp
+    %tic
+    clear mat1 mat2 data
+    for n = 1:2
+        mat1(:,n) = robustnessT.std(compsT.mat1{ii} & strcmp(robustnessT.measure, all_measures{n}));
+        mat2(:,n) = robustnessT.std(compsT.mat2{ii} & strcmp(robustnessT.measure, all_measures{n}));
+    end
+    if ii < 4
+        data = [[mat1(1:35,:), mat1(36:end,:)]; [mat2(1:35,:), mat2(36:end,:)]];
+    else
+        data = [mat1; mat2]; 
+    end
+    Pvals_rob(1,ii) = mean(permtest_aux(data,design,n_perm));
+end
+
+% Benjamini-Hochberg corrected p-values:
+[Pvals_rob_sort(1,:), indrob(1,:)] = sort(Pvals_rob(1,:));
+for j = 1:size(Pvals_rob_sort,2)-1
+    Pvals_rob_BHtmp(1,j) = min(Pvals_rob_sort(1,j)*n_comp,Pvals_rob_sort(1,j+1));
+end
+Pvals_rob_BHtmp(1,12) = Pvals_rob_sort(1,j)*n_comp;
+for j = 1:size(Pvals_rob_sort,2)
+    Pvals_rob_BH(1,indrob(1,j)) = Pvals_rob_BHtmp(1,j);
+end
+        
+save([outputdir '/Permtests_rob.mat'], 'Pvals_rob', 'Pvals_rob_BH');    
+    
+%% 6. Calculate risk of extreme errors
+% for each kernel, calculate percent of all runs where the *normalised* 
+% maximum absolute error exceeded 10, 100, and 1,000 respectively
+
+maxerr_sum10 = zeros(4,2); % rows are "features" (i.e. naive, naive normalised, Fisher, and KL divergence) and columns are versions of the kernels (linear and Gaussian)
+maxerr_sum100 = zeros(4,2);
+maxerr_sum1000 = zeros(4,2);
+for Fn = 1:4
+    for Kn = 1:2
+        features = Fnames{Fn};
+        kernel = Knames{Kn};
+        if ~(Fn==4 && Kn==1)
+            maxerr_sum10(Fn,Kn) = sum(kernel_resultsT.NMAXAE(strcmp(kernel_resultsT.features, features) & strcmp(kernel_resultsT.kernel, kernel))>10);
+            maxerr_sum100(Fn,Kn) = sum(kernel_resultsT.NMAXAE(strcmp(kernel_resultsT.features, features) & strcmp(kernel_resultsT.kernel, kernel))>100);
+            maxerr_sum1000(Fn,Kn) = sum(kernel_resultsT.NMAXAE(strcmp(kernel_resultsT.features, features) & strcmp(kernel_resultsT.kernel, kernel))>1000);
+        end
+    end
+end
+maxerr10_risk = maxerr_sum10./3500; % 3500 runs (35 variables * 100 iterations of CV) in total for each kernel
+maxerr100_risk = maxerr_sum100./3500;
+maxerr1000_risk = maxerr_sum1000./3500;
+
+save([outputdir 'maxerr_risk.mat', 'maxerr10_risk', 'maxerr100_risk', 'maxerr1000_risk');    
