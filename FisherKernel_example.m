@@ -73,7 +73,7 @@ K_options.normalisation = 'L2-norm'; % only here for visualisation, drop this wh
 % xlabel('Subjects'); ylabel('Subjects'); axis square; colorbar;
 
 % alternatively, use Gaussian Fisher kernel:
-K_options.kernel = 'Gaussian';
+K_options.kernel = 'gaussian';
 K_options.tau = 100; % estimate tau in CV
 
 [FKg, feat, Dist] = hmm_kernel(X, HMM1.hmm, K_options);
@@ -127,7 +127,7 @@ K_options.normalisation = 'L2-norm'; % only here for visualisation, drop this wh
 % PCA space)
 
 % alternatively, use Gaussian Fisher kernel:
-K_options.kernel = 'Gaussian';
+K_options.kernel = 'gaussian';
 K_options.tau = 100; % estimate tau in CV
 
 [FKg2, feat2, Dist2] = hmm_kernel(X, HMM2.hmm, K_options);

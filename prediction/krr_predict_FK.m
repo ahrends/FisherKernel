@@ -203,7 +203,7 @@ for perm = 1:Nperm
             folds = {1:N};
         else            
             rng('shuffle');
-            folds = cvfolds_copy(Yin,'gaussian',CVscheme(1),allcs);
+            folds = cvfolds_FK(Yin,'gaussian',CVscheme(1),allcs);
         end
     else
         folds = CVfolds;

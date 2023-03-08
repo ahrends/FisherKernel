@@ -18,6 +18,7 @@ addpath(genpath(hmm_scriptdir));
 all_vars = load([datadir '/vars.txt']);
 load([datadir '/headers_grouped_category.mat']) % headers of variables in all_vars
 load([datadir '/vars_target_with_IDs.mat'])
+age = all_vars(:,4);
 int_vars = vars_target_with_IDs;
 clear vars_target_with_IDs
 target_ind = ismember(all_vars(:,1), int_vars(:,1)); % find indices of subjects for which we have int_vars
@@ -26,7 +27,7 @@ confounds = all_vars(target_ind,[3,8]);
 make_HCPfamilystructure;
 % concatenate variables to be predicted (here: age and 34 intelligence
 % variables)
-Y = [pred_age(target_ind),int_vars(:,2:end)];
+Y = [age(target_ind),int_vars(:,2:end)];
 
 % load X: timecourses (here called 'data') that the HMM should be run on
 load([datadir '/tcs/hcp1003_RESTall_LR_groupICA50.mat']);
@@ -34,13 +35,13 @@ load([datadir '/tcs/hcp1003_RESTall_LR_groupICA50.mat']);
 % timepoints x ROIs matrix
 
 data_X = data(target_ind);
-clear data all_vars headers_grouped_category int_vars
+clear data all_vars headers_grouped_category int_vars age
 
 S = size(data_X,1); % number of subjects (for which at least one of the variables we want to predict are available)
 N = size(data_X{1},2); % number of ROIs
 T = cell(size(data_X,1),1); % cell containing no. of timepoints for each subject
 for s = 1:S
-    T{s} = size(data_X{s},1); % should be 4800 when using all four scanning sessions, 1200 when using only on
+    T{s} = size(data_X{s},1); % should be 4800 when using all four scanning sessions, 1200 when using only one
 end
 
 %% 1. Run group-level HMM
@@ -67,7 +68,7 @@ load([datadir '/tcs/hcp1003_REST1_LR_groupICA50.mat']);
 data_X1 = data(target_ind);
 T1 = cell(size(data_X1,1),1); % cell containing no. of timepoints for each subject
 for s = 1:S
-    T1{s} = size(data_X1{s},1); % should be 4800 when using all four scanning sessions, 1200 when using only on
+    T1{s} = size(data_X1{s},1); % should be 4800 when using all four scanning sessions, 1200 when using only one
 end
 clear HMM
 [HMM.hmm, HMM.Gamma, HMM.Xi, HMM.vpath, ~, ~, HMM.fehist] = hmmmar(data_X1, T1, hmm_options);
@@ -106,7 +107,7 @@ else
 end
 K_options.sigma = true;
 
-Fnames = {'naive', 'naive_norm', 'Fisher'};
+Fnames = {'naive', 'naive_norm', 'Fisher', 'KL'};
 Knames = {'linear', 'gaussian'};
 
 % This will construct the kernels and the features (compute the gradient
@@ -153,43 +154,45 @@ krr_params.alpha = [0.0001 0.001 0.01 0.1 0.3 0.5 0.7 0.9 1.0];
 krr_params.verbose = 1;
 krr_params.Nperm = 1; % 100 (for permutation-based significance testing)
 
-for Fn=1:3
+for Fn=1:4
     for Kn=1:2
-        for varN = 1:N_variables
-            for iterN = 1:N_iter
-                if ~exist([outputdir '/Predictions_' HMM_version '_' Fnames{Fn} '_' Knames{Kn} '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'file')
-                    % load kernel (for linear kernel) or
-                    % distance/divergence matrix (for Gaussian kernel)
-                    if strcmpi(Fnames{Fn}, 'KL')
-                        load([outputdir '/Kernel_KLdiv.mat'], 'Dist'); % load KL divergence matrix
-                    else
-                        if strcmpi(Knames{Kn}, 'linear')
-                            load([outputdir '/Kernel_' Fnames{Fn} '_' Knames{Kn} '.mat'], 'Kernel');
-                        elseif strcmpi(kernel, 'gaussian')
-                            load([outputdir '/Kernel_' Fnames{Fn} '_' Knames{Kn} '.mat'], 'Dist');
+        if ~((Fn>3) && (Kn==1))
+            for varN = 1:N_variables
+                for iterN = 1:N_iter
+                    if ~exist([outputdir '/Predictions_' HMM_version '_' Fnames{Fn} '_' Knames{Kn} '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'file')
+                        % load kernel (for linear kernel) or
+                        % distance/divergence matrix (for Gaussian kernel)
+                        if strcmpi(Fnames{Fn}, 'KL')
+                            load([outputdir '/Kernel_KLdiv.mat'], 'Dist'); % load KL divergence matrix
+                        else
+                            if strcmpi(Knames{Kn}, 'linear')
+                                load([outputdir '/Kernel_' Fnames{Fn} '_' Knames{Kn} '.mat'], 'Kernel');
+                            elseif strcmpi(Knames{Kn}, 'gaussian')
+                                load([outputdir '/Kernel_' Fnames{Fn} '_' Knames{Kn} '.mat'], 'Dist');
+                            end
                         end
+                        krr_params.kernel = Knames{Kn}; %'gaussian','linear';
+                        results = struct();
+                        Yin = Y(:,varN);
+                        index = ~isnan(Yin);
+                        Yin = Yin(index,:);
+                        rng('shuffle')
+                        % choose input: use Kernel for linear kernel and distance matrix for
+                        % Gaussian kernel (to estimate kernel width within KRR CV)
+                        if strcmpi(Knames{Kn}, 'linear')
+                            Din = Kernel(index,index);
+                        elseif strcmpi(Knames{Kn}, 'gaussian')
+                            Din = Dist(index, index);
+                        end
+                        % disp(['Now running iteration ' num2str(i) ' out of ' num2str(niter) ...
+                        %    ' for variable ' num2str(j) ' out of ' num2str(nvars) ' for ' ...
+                        %       Knames{k} ' ' Fnames{f} ' kernel']);
+                        [results.predictedY, results.predictedYD, results.YD, results.stats] = predictPhenotype_kernels(Yin, ...
+                            Din, krr_params, twins(index,index), confounds(index,:)); % twins is the family structure used for CV
+
+                        if ~isdir(outputdir); mkdir(outputdir); end
+                        save([outputdir '/Predictions_' HMM_version '_' Fnames{Fn} '_' Knames{Kn} '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'results');
                     end
-                    krr_params.kernel = Knames{Kn}; %'gaussian','linear';
-                    results = struct();
-                    Yin = Y(:,varN);
-                    index = ~isnan(Yin);
-                    Yin = Yin(index,:);
-                    rng('shuffle')
-                    % choose input: use Kernel for linear kernel and distance matrix for
-                    % Gaussian kernel (to estimate kernel width within KRR CV)
-                    if strcmpi(Knames{Kn}, 'linear')
-                        Din = Kernel(index,index);
-                    elseif strcmpi(Knames{Kn}, 'gaussian')
-                        Din = Dist(index, index);
-                    end
-                    % disp(['Now running iteration ' num2str(i) ' out of ' num2str(niter) ...
-                    %    ' for variable ' num2str(j) ' out of ' num2str(nvars) ' for ' ...
-                    %       Knames{k} ' ' Fnames{f} ' kernel']);
-                    [results.predictedY, results.predictedYD, results.YD, results.stats] = predictPhenotype_kernels(Yin, ...
-                        Din, krr_params, twins(index,index), confounds(index,:)); % twins is the family structure used for CV
-    
-                    if ~isdir(outputdir); mkdir(outputdir); end
-                    save([outputdir '/Predictions_' HMM_version '_' Fnames{Fn} '_' Knames{Kn} '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'results');
                 end
             end
         end
@@ -199,13 +202,13 @@ end
 % (SI: run also for static FC KL divergence)
 load([outputdir '/Kernel_KLdiv_staticFC.mat'], 'Dist');
 krr_params.kernel = 'gaussian';
-Din = Dist(index, index);
 for varN = 1:N_variables
     for iterN = 1:N_iter
         results = struct();
         Yin = Y(:,varN);
         index = ~isnan(Yin);
         Yin = Yin(index,:);
+        Din = Dist(index, index);
         rng('shuffle')
         % disp(['Now running iteration ' num2str(i) ' out of ' num2str(niter) ...
         %    ' for variable ' num2str(j) ' out of ' num2str(nvars) ' for static FC KL']);
@@ -220,7 +223,7 @@ end
 % load all predictions, evaluate correlation between predicted and actual,
 % NRMSE, and NMAXAE, and assemble everything in a table
 
-Fnames = {'naive', 'naive_norm', 'Fisher', 'staticFC'};
+Fnames = {'naive', 'naive_norm', 'Fisher', 'KL', 'staticFC'};
 kernel_resultsT = table();
 i= 0;
 for Fn = 1:5
@@ -242,7 +245,7 @@ for Fn = 1:5
                     kernel_resultsT.predictedY{i} = results.predictedY;
                     % for sanity checks and optimisation, check betas (if
                     % saved from KRR) and hyperparameters 
-                    kernel_resultsT.beta{i} = results.beta; % beta are the regression weights
+                    % kernel_resultsT.beta{i} = results.beta; % beta are the regression weights
                     kernel_resultsT.lambda{i} = results.stats.alpha; % regularisation parameter is called alpha in predictPhenotype, but lambda in the manuscript
                     kernel_resultsT.tau{i} = results.stats.sigma; % width of Gaussian kernel (this parameter is irrelevant for linear kernels), 
                     % note that this is called sigma in predictPhenotype, but tau in the manuscript to avoid confusion with the HMM state covariances
@@ -261,8 +264,18 @@ end
 
 save([outputdir '/kernel_resultsT.mat'], 'kernel_resultsT');
 
+% export results to make figures in R
+kernel_results_short = table(kernel_resultsT.features, kernel_resultsT.kernel, ...
+    kernel_resultsT.varN, kernel_resultsT.iterN, kernel_resultsT.corr, ...
+    kernel_resultsT.RMSE, kernel_resultsT.NRMSE,...
+    kernel_resultsT.MAXAE, kernel_resultsT.NMAXAE, ...
+    'VariableNames', {'features', 'kernel', 'varN', 'iterN', 'corr', ...
+    'RMSE', 'NRMSE', 'MAXAE', 'NMAXAE'});
+writetable(kernel_results_short, [outputdir '/kernel_results_short.csv']);
+
 % robustness: standard deviation over 100 iterations of
-% 10-fold CV for each variable and each kernel
+% 10-fold CV for each variable and each kernel (only if n_iter above was
+% changed to more than 1 iteration)
 robustnessT = table();
 all_measures = {'corr', 'NRMSE'};
 j=1;
@@ -368,13 +381,49 @@ for i = 1:2
     end
 end
 
-
-save([outputdir '/Permtests_acc.mat', 'Pvals_acc', 'Pvals_acc_BH');    
+save([outputdir '/Permtests_acc.mat'], 'Pvals_acc', 'Pvals_acc_BH');    
     
 % test for significant differences in robustness of accuracy (standard 
 % deviation of correlation coefficient and NRMSE)
 
-% comparisons are the same as above
+% set up which comparisons to do
+% logical indices for results table
+CN = strcmp(robustnessT.features, 'naive');
+CNN = strcmp(robustnessT.features, 'naive_norm');
+CFK = strcmp(robustnessT.features, 'Fisher');
+CKL = strcmp(robustnessT.features, 'KL');
+Clin = strcmp(robustnessT.kernel, 'linear');
+Cgaus = strcmp(robustnessT.kernel, 'gaussian');
+
+% set up comparisons: each row is a test, mat1 and mat2 are the logical
+% indices to be compared
+% compare Fisher kernel with naive kernel and naive normalised kernel
+% (linear & Gaussian versions collapsed)
+n_comp = 12;
+compsT = table();
+compsT.mat1{1} = CN;
+compsT.mat2{1} = CNN;
+compsT.mat1{2} = CN;
+compsT.mat2{2} = CFK;
+compsT.mat1{3} = CNN;
+compsT.mat2{3} = CFK;
+% compare linear with Gaussian versions of kernels
+compsT.mat1{4} = CN & Clin;
+compsT.mat2{4} = CN & Cgaus;
+compsT.mat1{5} = CNN & Clin;
+compsT.mat2{5} = CNN & Cgaus;
+compsT.mat1{6} = CFK & Clin;
+compsT.mat2{6} = CFK & Cgaus;
+% compare each kernel with KL divergence
+compsT.mat1{7} = CN & Clin;
+compsT.mat1{8} = CN & Cgaus;
+compsT.mat1{9} = CNN & Clin;
+compsT.mat1{10} = CNN & Cgaus;
+compsT.mat1{11} = CFK & Clin;
+compsT.mat1{12} = CFK & Cgaus;
+for iii = 7:12
+    compsT.mat2{iii} = CKL;
+end
 
 design = [ones([1,35]) repmat(2,[1,35])]';
 n_perm = 5000;
@@ -429,4 +478,4 @@ maxerr10_risk = maxerr_sum10./3500; % 3500 runs (35 variables * 100 iterations o
 maxerr100_risk = maxerr_sum100./3500;
 maxerr1000_risk = maxerr_sum1000./3500;
 
-save([outputdir 'maxerr_risk.mat', 'maxerr10_risk', 'maxerr100_risk', 'maxerr1000_risk');    
+save([outputdir '/maxerr_risk.mat'], 'maxerr10_risk', 'maxerr100_risk', 'maxerr1000_risk');    
