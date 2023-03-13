@@ -41,12 +41,10 @@ p = hmm.train.lowrank; do_HMM_pca = (p > 0);
     
 train = hmm.train;
 checkdatacell;
-
 % if train.standardise
 %     disp('Option standardise should be zero in hmmdual.')
 %     disp('Standardization should be done separately and using the entire data set.')
 % end
-
 data = data2struct(data,T,train);
 % Standardise data and control for ackward trials
 valid_dims = computeValidDimensions(data,train);

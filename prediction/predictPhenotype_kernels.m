@@ -9,11 +9,11 @@ function [predictedY,predictedYD,YD,stats] = predictPhenotype_kernels(Yin,Din,op
 %           is to be predicted, then Yin should be encoded by a
 %           (no. subjects by no. classes) matrix, with zeros or ones
 %           indicator entries.
-% Din       (no. subjects by no. subjects) matrix of either distances between
-%           subjects, calculated (for example) by computeDistMatrix or
-%           computeDistMatrix_AVFC (in which case, options.kernel should be
-%           'gaussian' or pre-computed kernel, in which case options.kernel
-%           should be 'linear';
+% Din       (no. subjects by no. subjects) matrix calculated (for 
+%           example) by hmm_kernel, computeDistMatrix or
+%           computeDistMatrix_AVFC. For the Gaussian kernel, this should be
+%           distances/divergences. For the linear kernel, this should be
+%           the kernel itself (dot-product).           
 % options   Struct with the prediction options, with fields:
 %   + alpha - for method='KRR', a vector of weights on the L2 penalty on the regression
 %           By default: [0.0001 0.001 0.01 0.1 0.4 0.7 1.0 10 100]
@@ -88,7 +88,6 @@ if nargin < 3 || isempty(options), options = struct(); end
 % else
 %     method = 'KRR';
 % end
-
 if ~isfield(options,'alpha')
     alpha = [0.0001 0.001 0.01 0.1 0.4 0.7 1.0 10 100];
 else
