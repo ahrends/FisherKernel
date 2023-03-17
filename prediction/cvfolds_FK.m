@@ -89,7 +89,8 @@ while j<=N
     else 
         if j < round(N*0.8,0) % for the first 80% of examples, randomly attribute the families into any fold
             %ii = randi(nfolds);
-            ii = randfold_vec(j);                
+            ii = randfold_vec(j);
+		    counts(ii) = counts(ii) + length(Jj);                
         else % choose the fold with less examples (only in the last 10% of examples)
             [~,ii] = min(counts);
             counts(ii) = counts(ii) + length(Jj);
