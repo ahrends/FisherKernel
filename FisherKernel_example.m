@@ -62,7 +62,7 @@ K_options.P = true; % transition probabilities
 K_options.mu = true; % state means
 K_options.sigma = true; % state covariances
 K_options.type = 'Fisher'; % one of 'naive', 'naive_norm', or 'Fisher'
-K_options.kernel = 'linear';
+K_options.shape = 'linear';
 K_options.normalisation = 'L2-norm'; % only here for visualisation, drop this when running KRR
 
 [FK, feat] = hmm_kernel(X, HMM1.hmm, K_options);
@@ -73,7 +73,7 @@ K_options.normalisation = 'L2-norm'; % only here for visualisation, drop this wh
 % xlabel('Subjects'); ylabel('Subjects'); axis square; colorbar;
 
 % alternatively, use Gaussian Fisher kernel:
-K_options.kernel = 'gaussian';
+K_options.shape = 'gaussian';
 K_options.tau = 100; % estimate tau in CV
 
 [FKg, feat, Dist] = hmm_kernel(X, HMM1.hmm, K_options);
@@ -113,7 +113,7 @@ K_options.P = true; % transition probabilities
 K_options.mu = false; % state means
 K_options.sigma = true; % state covariances
 K_options.type = 'Fisher'; % one of 'naive', 'naive_norm', or 'Fisher'
-K_options.kernel = 'linear';
+K_options.shape = 'linear';
 K_options.normalisation = 'L2-norm'; % only here for visualisation, drop this when running KRR
 
 [FK2, feat2] = hmm_kernel(X, HMM2.hmm, K_options);
@@ -127,7 +127,7 @@ K_options.normalisation = 'L2-norm'; % only here for visualisation, drop this wh
 % PCA space)
 
 % alternatively, use Gaussian Fisher kernel:
-K_options.kernel = 'gaussian';
+K_options.shape = 'gaussian';
 K_options.tau = 100; % estimate tau in CV
 
 [FKg2, feat2, Dist2] = hmm_kernel(X, HMM2.hmm, K_options);
@@ -175,7 +175,7 @@ krr_options.CVscheme = [10 10];
 krr_options.verbose = 1;
 %krr_params.sigmafact = 1;
 krr_options.Nperm = 1; % (only relevant for permutation-based significance testing)
-krr_options.kernel = 'linear'; % krr_predict_FK uses feature matrices as input and is inefficient for Gaussian kernel (use krr_predict with distance matrices as input instead)
+krr_options.shape = 'linear'; % krr_predict_FK uses feature matrices as input and is inefficient for Gaussian kernel (use krr_predict with distance matrices as input instead)
 
 varN = 2;
 Yin = Y(:,varN);

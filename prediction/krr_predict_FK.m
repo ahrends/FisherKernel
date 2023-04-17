@@ -31,7 +31,7 @@
 %   + Nperm - number of permutations (set to 0 to skip permutation testing)
 %   + show_scatter - set to 1 to show a scatter plot of predicted_Y vs Y (only for family='gaussian' or 'poisson')
 %   + verbose -  display progress?
-%   + kernel - linear or Gaussian
+%   + shape - shape of kernel ('linear' or 'Gaussian')
 % correlation_structure (optional) - A (Nsamples X Nsamples) matrix with
 %                                   integer dependency labels (e.g., family structure), or 
 %                                    A (Nsamples X 1) vector defining some
@@ -85,9 +85,9 @@ if ~isfield(parameters,'Nperm'), Nperm=1;
 else, Nperm = parameters.Nperm; end
 if ~isfield(parameters,'verbose'), verbose=0;
 else, verbose = parameters.verbose; end
-if ~isfield(parameters,'kernel'); kernel = 'gaussian';
-else, kernel = parameters.kernel; end
-if strcmpi(kernel, 'linear')
+if ~isfield(parameters,'shape'); shape = 'gaussian';
+else, shape = parameters.shape; end
+if strcmpi(shape, 'linear')
     sigmafact = 1;
 end
 
@@ -282,12 +282,12 @@ for perm = 1:Nperm
                             
 %                 K = gauss_kernel(QD,sigma); 
 %                 K2 = gauss_kernel(QD2,sigma); 
-                if strcmpi(kernel, 'gaussian')
+                if strcmpi(shape, 'gaussian')
                     sigmabase = auto_sigma2(QX);
                     sigma = sigmf * sigmabase;
                     K = gauss_kernel2(QX,QX,sigma);
                     K2 = gauss_kernel2(QX2,QX,sigma);
-                elseif strcmpi(kernel, 'linear')
+                elseif strcmpi(shape, 'linear')
                     K = fisherK(QX,QX);
                     K2 = fisherK(QX2,QX);
                 end
@@ -316,13 +316,13 @@ for perm = 1:Nperm
          
 %         K = gauss_kernel(D,sigma); 
 %         K2 = gauss_kernel(D2,sigma);
-        if strcmpi(kernel, 'gaussian')
+        if strcmpi(shape, 'gaussian')
             sigmf = sigmafact(isigm);
             sigmabase = auto_sigma2(X);
             sigma = sigmf * sigmabase;
             K = gauss_kernel2(X,X,sigma);
             K2 = gauss_kernel2(X2,X,sigma);
-        elseif strcmpi(kernel, 'linear')
+        elseif strcmpi(shape, 'linear')
             K = fisherK(X,X);
             K2 = fisherK(X2,X);
             sigmf = NaN;

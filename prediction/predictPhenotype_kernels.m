@@ -13,7 +13,7 @@ function [predictedY,predictedYD,YD,stats] = predictPhenotype_kernels(Yin,Din,op
 %           example) by hmm_kernel, computeDistMatrix or
 %           computeDistMatrix_AVFC. For the Gaussian kernel, this should be
 %           distances/divergences. For the linear kernel, this should be
-%           the kernel itself (dot-product).           
+%           the kernel itself (dot-product).   
 % options   Struct with the prediction options, with fields:
 %   + alpha - for method='KRR', a vector of weights on the L2 penalty on the regression
 %           By default: [0.0001 0.001 0.01 0.1 0.4 0.7 1.0 10 100]
@@ -26,7 +26,7 @@ function [predictedY,predictedYD,YD,stats] = predictPhenotype_kernels(Yin,Din,op
 %   + CVfolds - prespecified CV folds for the outer loop
 %   + biascorrect - whether we correct for bias in the estimation 
 %                   (Smith et al. 2019, NeuroImage)
-%   + kernel - which kernel to use ('linear' or 'gaussian')
+%   + shape - which kernel to use ('linear' or 'gaussian')
 %   + verbose -  display progress?
 % cs        optional (no. subjects X no. subjects) dependency structure matrix with
 %           specifying possible relations between subjects (e.g., family
@@ -57,12 +57,12 @@ function [predictedY,predictedYD,YD,stats] = predictPhenotype_kernels(Yin,Din,op
 % adapted to different kernels:
 % Christine Ahrends, Aarhus University, 2022
 
-if ~isfield(options, 'kernel')
-    kernel = 'linear';
+if ~isfield(options, 'shape')
+    shape = 'linear';
 else
-    kernel = options.kernel;
+    shape = options.shape;
 end
-if strcmp(kernel, 'gaussian')
+if strcmp(shape, 'gaussian')
     Din(eye(size(Din,1))==1) = 0; 
 end
 [N,q] = size(Yin);
@@ -93,7 +93,7 @@ if ~isfield(options,'alpha')
 else
     alpha = options.alpha;
 end
-if strcmp(kernel, 'gaussian')
+if strcmp(shape, 'gaussian')
     if ~isfield(options,'sigmafact')
         sigmafact = [1/5 1/3 1/2 1 2 3 5];
     else
@@ -161,12 +161,12 @@ if isempty(CVfolds)
     if CVscheme(1)==1
         folds = {1:N};
     elseif q == 1
-        rng('shuffle');
+        
         Yin_copy = Yin; Yin_copy(isnan(Yin)) = realmax;
-        folds = cvfolds_FK(Yin_copy,'gaussian',CVscheme(1),allcs);
+        folds = cvfolds(Yin_copy,CVscheme(1),allcs,1);
     else % no stratification
-        rng('shuffle');
-        folds = cvfolds_FK(randn(size(Yin,1),1),'gaussian',CVscheme(1),allcs);
+        
+        folds = cvfolds(randn(size(Yin,1),1),CVscheme(1),allcs,1);
     end
 else
     folds = CVfolds;
@@ -209,8 +209,8 @@ for ifold = 1:length(folds)
         Yii = Yii(ind,ii); 
         QDin = Dii(ind,ind); 
         QN = length(ind);
-        rng('shuffle')
-        Qfolds = cvfolds_FK(Yii,'gaussian',CVscheme(2),Qallcs); % we stratify
+        
+        Qfolds = cvfolds(Yii,CVscheme(2),Qallcs,1); % we stratify
 
         % deconfounding business
         if deconfounding
@@ -242,12 +242,12 @@ for ifold = 1:length(folds)
                 Nji = length(Qji);
                 QD2 = QDin(QJ,Qji);
                 
-                if strcmp(kernel, 'gaussian')
+                if strcmp(shape, 'gaussian')
                     sigmabase = auto_sigma(QD);
                     sigma = sigmf * sigmabase;
                     K = gauss_kernel(QD,sigma);
                     K2 = gauss_kernel(QD2,sigma);
-                elseif strcmp(kernel, 'linear')
+                elseif strcmp(shape, 'linear')
                     K = QD;
                     K2 = QD2;
                 end
@@ -271,13 +271,13 @@ for ifold = 1:length(folds)
         alph = alpha(ialph);
         Dii = D(ind,ind); D2ii = D2(:,ind);
         
-        if strcmp(kernel, 'gaussian')
+        if strcmp(shape, 'gaussian')
             sigmf = sigmafact(isigm);
             sigmabase = auto_sigma(D);
             sigma = sigmf * sigmabase;
             K = gauss_kernel(Dii,sigma);
             K2 = gauss_kernel(D2ii,sigma);
-        elseif strcmp(kernel, 'linear')
+        elseif strcmp(shape, 'linear')
             K = Dii;
             K2 = D2ii;
             sigmf = NaN;
@@ -358,8 +358,8 @@ for ifold = 1:length(folds)
     %disp(['Fold ' num2str(ifold) ])
     stats.alpha(ifold) = alph;
     stats.sigma(ifold) = sigmf;
-%    stats.sigma(ifold) = NaN;
-%    stats.beta(ifold,:) = beta;
+
+
 end
 
 stats.sse = zeros(q,1);

@@ -118,16 +118,16 @@ for Fn=1:3
         % 'naive' will also give the vectorised parameters, 'naive_norm' will also
         % give the normalised vectorised parameters, 'Fisher' will also give the
         % gradient features
-        K_options.kernel = Knames{Kn};
+        K_options.shape = Knames{Kn};
 
         if ~isdir(outputdir); mkdir(outputdir); end
-        clear Kernel features Dist
+        clear Kernel type Dist
         if Kn==2
-            [Kernel, features, Dist] = hmm_kernel(data_X, HMM.hmm, K_options);
-            save([outputdir '/Kernel_' Fnames{Fn} '_' Knames{Kn} '.mat'], 'Kernel', 'features', 'Dist');
+            [Kernel, type, Dist] = hmm_kernel(data_X, HMM.hmm, K_options);
+            save([outputdir '/Kernel_' Fnames{Fn} '_' Knames{Kn} '.mat'], 'Kernel', 'type', 'Dist');
         else
-            [Kernel, features] = hmm_kernel(data_X, HMM.hmm, K_options);
-            save([outputdir '/Kernel_' Fnames{Fn} '_' Knames{Kn} '.mat'], 'Kernel', 'features');
+            [Kernel, type] = hmm_kernel(data_X, HMM.hmm, K_options);
+            save([outputdir '/Kernel_' Fnames{Fn} '_' Knames{Kn} '.mat'], 'Kernel', 'type');
         end
     end
 end
@@ -171,7 +171,7 @@ for Fn=1:4
                                 load([outputdir '/Kernel_' Fnames{Fn} '_' Knames{Kn} '.mat'], 'Dist');
                             end
                         end
-                        krr_params.kernel = Knames{Kn}; %'gaussian','linear';
+                        krr_params.shape = Knames{Kn}; %'gaussian','linear';
                         results = struct();
                         Yin = Y(:,varN);
                         index = ~isnan(Yin);
@@ -201,7 +201,7 @@ end
 
 % (SI: run also for static FC KL divergence)
 load([outputdir '/Kernel_KLdiv_staticFC.mat'], 'Dist');
-krr_params.kernel = 'gaussian';
+krr_params.shape = 'gaussian';
 for varN = 1:N_variables
     for iterN = 1:N_iter
         results = struct();
@@ -238,8 +238,8 @@ for Fn = 1:5
                     end
                     i = i+1;
                     % settings for this prediction
-                    kernel_resultsT.features{i} = Fnames{Fn};
-                    kernel_resultsT.kernel{i} = Knames{Kn};
+                    kernel_resultsT.type{i} = Fnames{Fn};
+                    kernel_resultsT.shape{i} = Knames{Kn};
                     kernel_resultsT.varN(i) = varN;
                     kernel_resultsT.iterN(i) = iterN;
                     kernel_resultsT.predictedY{i} = results.predictedY;
@@ -265,7 +265,7 @@ end
 save([outputdir '/kernel_resultsT.mat'], 'kernel_resultsT');
 
 % export results to make figures in R
-kernel_results_short = table(kernel_resultsT.features, kernel_resultsT.kernel, ...
+kernel_results_short = table(kernel_resultsT.type, kernel_resultsT.shape, ...
     kernel_resultsT.varN, kernel_resultsT.iterN, kernel_resultsT.corr, ...
     kernel_resultsT.RMSE, kernel_resultsT.NRMSE,...
     kernel_resultsT.MAXAE, kernel_resultsT.NMAXAE, ...
@@ -283,16 +283,16 @@ for Fn = 1:4
     for Kn = 1:2
         for v = 1:varN
             for m = 1:2
-                features = Fnames{Fn};
-                kernel = Knames{Kn};
+                type = Fnames{Fn};
+                shape = Knames{Kn};
                 measure = all_measures{m};
                 if ~((Fn==4) && (Kn==1))
-                    robustnessT.features{j} = features;
-                    robustnessT.kernel{j} = kernel;
+                    robustnessT.type{j} = type;
+                    robustnessT.shape{j} = shape;
                     robustnessT.measure{j} = measure;
                     robustnessT.varN(j) = v;
                     robustnessT.std(j) = std(eval(['kernel_resultsT.' measure ...
-                        '((strcmpi(kernel_resultsT.kernel, kernel)) & (strcmpi(kernel_resultsT.features, features)) & (kernel_resultsT.varN == v))']));
+                        '((strcmpi(kernel_resultsT.shape, shape)) & (strcmpi(kernel_resultsT.type, type)) & (kernel_resultsT.varN == v))']));
                     j = j+1;
                 end
             end
@@ -307,12 +307,12 @@ save([outputdir '/Kernel_robustnessT.mat'], 'robustnessT')
 
 % set up which comparisons to do
 % logical indices for results table
-CN = strcmp(kernel_resultsT.features, 'naive');
-CNN = strcmp(kernel_resultsT.features, 'naive_norm');
-CFK = strcmp(kernel_resultsT.features, 'Fisher');
-CKL = strcmp(kernel_resultsT.features, 'KL');
-Clin = strcmp(kernel_resultsT.kernel, 'linear');
-Cgaus = strcmp(kernel_resultsT.kernel, 'gaussian');
+CN = strcmp(kernel_resultsT.type, 'naive');
+CNN = strcmp(kernel_resultsT.type, 'naive_norm');
+CFK = strcmp(kernel_resultsT.type, 'Fisher');
+CKL = strcmp(kernel_resultsT.type, 'KL');
+Clin = strcmp(kernel_resultsT.shape, 'linear');
+Cgaus = strcmp(kernel_resultsT.shape, 'gaussian');
 
 % set up comparisons: each row is a test, mat1 and mat2 are the logical
 % indices to be compared
@@ -388,12 +388,12 @@ save([outputdir '/Permtests_acc.mat'], 'Pvals_acc', 'Pvals_acc_BH');
 
 % set up which comparisons to do
 % logical indices for results table
-CN = strcmp(robustnessT.features, 'naive');
-CNN = strcmp(robustnessT.features, 'naive_norm');
-CFK = strcmp(robustnessT.features, 'Fisher');
-CKL = strcmp(robustnessT.features, 'KL');
-Clin = strcmp(robustnessT.kernel, 'linear');
-Cgaus = strcmp(robustnessT.kernel, 'gaussian');
+CN = strcmp(robustnessT.type, 'naive');
+CNN = strcmp(robustnessT.type, 'naive_norm');
+CFK = strcmp(robustnessT.type, 'Fisher');
+CKL = strcmp(robustnessT.type, 'KL');
+Clin = strcmp(robustnessT.shape, 'linear');
+Cgaus = strcmp(robustnessT.shape, 'gaussian');
 
 % set up comparisons: each row is a test, mat1 and mat2 are the logical
 % indices to be compared
@@ -465,12 +465,12 @@ maxerr_sum100 = zeros(4,2);
 maxerr_sum1000 = zeros(4,2);
 for Fn = 1:4
     for Kn = 1:2
-        features = Fnames{Fn};
-        kernel = Knames{Kn};
+        type = Fnames{Fn};
+        shape = Knames{Kn};
         if ~(Fn==4 && Kn==1)
-            maxerr_sum10(Fn,Kn) = sum(kernel_resultsT.NMAXAE(strcmp(kernel_resultsT.features, features) & strcmp(kernel_resultsT.kernel, kernel))>10);
-            maxerr_sum100(Fn,Kn) = sum(kernel_resultsT.NMAXAE(strcmp(kernel_resultsT.features, features) & strcmp(kernel_resultsT.kernel, kernel))>100);
-            maxerr_sum1000(Fn,Kn) = sum(kernel_resultsT.NMAXAE(strcmp(kernel_resultsT.features, features) & strcmp(kernel_resultsT.kernel, kernel))>1000);
+            maxerr_sum10(Fn,Kn) = sum(kernel_resultsT.NMAXAE(strcmp(kernel_resultsT.type, type) & strcmp(kernel_resultsT.shape, shape))>10);
+            maxerr_sum100(Fn,Kn) = sum(kernel_resultsT.NMAXAE(strcmp(kernel_resultsT.type, type) & strcmp(kernel_resultsT.shape, shape))>100);
+            maxerr_sum1000(Fn,Kn) = sum(kernel_resultsT.NMAXAE(strcmp(kernel_resultsT.type, type) & strcmp(kernel_resultsT.shape, shape))>1000);
         end
     end
 end
