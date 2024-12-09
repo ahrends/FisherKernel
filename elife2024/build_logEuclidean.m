@@ -1,0 +1,43 @@
+function build_logEuclidean()
+%% 
+% build log Euclidean distance matrix
+% This is the Frobenius norm of the logarithm map of the time-averaged 
+% covariance matrices (Jayasumana et al., arXiv 2013)
+% The distance matrix will be used in Gaussian kernel for KRR in main
+% prediction function
+%
+% Christine Ahrends, University of Oxford, 2024
+
+%% Preparation
+
+% set directories
+datadir = '/path/to/data';
+outputdir = '/path/to/kernels';
+
+% load behavioural data (to get correct subject indices)
+all_vars = load([datadir '/vars.txt']);
+load([datadir '/headers_grouped_category.mat']) % headers of variables in all_vars
+pred_age = all_vars(:,4);
+load([datadir '/vars_target_with_IDs.mat'])
+int_vars = vars_target_with_IDs;
+clear vars_target_with_IDs
+target_ind = ismember(all_vars(:,1), int_vars(:,1)); % indices of 1,001 subjects with at least one behavioural variable
+
+load([datadir '/FC_cov_groupICA50.mat']); % load time-averaged covariance matrices
+FC_cov = FC_cov(:,:,target_ind); % remove subjects missing behavioural data
+
+%% compute distance matrix
+n_subs = 1001;
+D_fro = zeros(n_subs);
+
+for i = 1:n_subs
+    for j = 1:n_subs
+        D_fro(i,j) = norm((log(squeeze(FC_cov(:,:,i)))-log(squeeze(FC_cov(:,:,j)))), 'fro');
+    end
+end
+
+% to check that distance matrix looks reasonable
+% figure; imagesc(D_fro); axis square; colorbar
+save([outputdir '/D_Fro.mat'], 'D_fro')
+
+end

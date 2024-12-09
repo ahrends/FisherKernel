@@ -3,7 +3,8 @@ function SelectedEdges(varN, iterN)
 % Selected Edges method for predicting from time-averaged FC matrices, as
 % described in Rosenberg et al. 2018 & Shen et al. 2018
 % main prediction part adapted from https://www.nitrc.org/projects/bioimagesuite/behavioralprediction.m
-
+% 
+% Christine Ahrends, Aarhus University, 2023
 
 %% Preparation
 % set directories
