@@ -1,10 +1,16 @@
-function build_logEuclidean()
+function D = build_logEuclidean(FC_cov)
 %% 
 % build log Euclidean distance matrix
 % This is the Frobenius norm of the logarithm map of the time-averaged 
 % covariance matrices (Jayasumana et al., arXiv 2013)
 % The distance matrix will be used in Gaussian kernel for KRR in main
 % prediction function
+%
+% Input:
+%    FC_cov: covariance matrices (3D matrix of size ROIs x ROIs x subjects)
+% 
+% Output:
+%    D: distance matrix
 %
 % Christine Ahrends, University of Oxford, 2024
 
@@ -23,7 +29,6 @@ int_vars = vars_target_with_IDs;
 clear vars_target_with_IDs
 target_ind = ismember(all_vars(:,1), int_vars(:,1)); % indices of 1,001 subjects with at least one behavioural variable
 
-load([datadir '/FC_cov_groupICA50.mat']); % load time-averaged covariance matrices
 FC_cov = FC_cov(:,:,target_ind); % remove subjects missing behavioural data
 
 %% compute distance matrix

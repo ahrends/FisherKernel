@@ -1,8 +1,27 @@
-function SelectedEdges(varN, iterN)
+function results = SelectedEdges(varN, iterN)
 %% 
 % Selected Edges method for predicting from time-averaged FC matrices, as
 % described in Rosenberg et al. 2018 & Shen et al. 2018
 % main prediction part adapted from https://www.nitrc.org/projects/bioimagesuite/behavioralprediction.m
+%
+% Input:
+%    varN: variable number (here from 1:35, 1 being age, 2:34 cognitive
+%    items)
+%    iterN: iteration number, used to load pre-defined folds
+% 
+% Output:
+%    results: struct containing results
+%        kcorr: fold-level correlation between predicted and true Y in original space (1 x k vector)
+%        kcorr_deconf: "-" in deconfounded space
+%        kcod: fold-level coefficient of determination in original space (1 x k vector)
+%        kcod_deconf: "-" in deconfounded space
+%        knmae: fold-level normalised maximum absolute error in original space (1 x k vector)
+%        knmae_deconf: "-" in deconfounded space
+%        predictedY: all test folds predicted Y in original space
+%        predictedYD: "-" in deconfounded space
+%        YD: deconfounded Y
+%        avcorr: correlation between predicted and true Y across folds in original space
+%        avcorr_deconf: "-" in deconfounded space
 % 
 % Christine Ahrends, Aarhus University, 2023
 

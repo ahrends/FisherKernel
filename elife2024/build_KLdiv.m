@@ -1,4 +1,4 @@
-function build_KLdiv()
+function D = build_KLdiv(HMM_name)
 
 %% 
 % build symmetrised KL divergence matrix based on time-varying model (HMM)
@@ -6,6 +6,12 @@ function build_KLdiv()
 % timecourses.
 % The divergence matrix will be used in Gaussian kernel for KRR in main
 % prediction function
+%
+% Input:
+%    HMM_name: Name of the file containing the trained HMM
+% 
+% Output:
+%    D: symmetrised KL divergence matrix (subjects x subjects)
 %
 % Christine Ahrends, University of Oxford, 2024
 
@@ -23,7 +29,6 @@ addpath(genpath(hmm_scriptdir));
 % load data (timecourses for 1001 subjects for which at least one
 % behavioural variable is available
 load([datadir '/tc1001_restall.mat']) % data_X
-HMM_name = 'HMM_allsess';
 load([outputdir '/HMMs/' HMM_name '.mat']) % HMM
 
 %% compute divergence matrix

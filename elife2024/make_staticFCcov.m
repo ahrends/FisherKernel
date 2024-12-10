@@ -1,14 +1,24 @@
-function make_staticFCcov()
+function FC_cov = make_staticFCcov(datadir, n_sess)
 
 %%
 % make subject-wise static FC (covariance) matrices for HCP rsFMRI
 % This script uses groupICA50 parcellation
+% Requires that both the behavioural data and the timecourses in groupICA50
+% parcellation can be found in the data directory
+%
+% Input:
+%    datadir: Path to data directory containing behavioural data and
+%    groupICA50 timecourses
+%    n_sess: The number of sessions per subject to be used (4 to use all
+%    sessions)
+%
+% Output:
+%    FC_cov: Covariance matrices for all subjects having at least one
+%    behavioural variable (3D tensor of size ROIs x ROIs x subjects)
 %
 % Christine Ahrends, University of Oxford, 2024
 
 %% Preparation
-
-datadir = '/path/to/data';
 
 % load behavioural data to compare indices
 all_vars = load([datadir '/vars.txt']);
@@ -20,7 +30,6 @@ clear vars_target_with_IDs
 target_ind = ismember(all_vars(:,1), int_vars(:,1)); % indices of subjects with at least one behavioural variable (N=1001)
 
 n_subs = 1001; % number of subjects
-n_sess = 4; % number of sessions per subjects
 n_rois = 50; % number of ROIs in parcellation
 ts_persess = 1200; % number of timepoints in each session
 
