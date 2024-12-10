@@ -27,7 +27,7 @@ function HMM = fit_HMM(only_cov, k)
 scriptdir = '/path/to/code';
 hmm_scriptdir = '/path/to/HMM-MAR-master';
 datadir = '/path/to/data';%[projectdir '/scratch/Kernel/data'];
-outputdir = '/path/to/output';
+outputdir = '/path/to/hmm';
 
 if ~isdir(outputdir); mkdir(outputdir); end
 
