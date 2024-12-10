@@ -28,16 +28,16 @@ FC_cov = FC_cov(:,:,target_ind); % remove subjects missing behavioural data
 
 %% compute distance matrix
 n_subs = 1001;
-D_fro = zeros(n_subs);
+Dist = zeros(n_subs);
 
 for i = 1:n_subs
     for j = 1:n_subs
-        D_fro(i,j) = norm((log(squeeze(FC_cov(:,:,i)))-log(squeeze(FC_cov(:,:,j)))), 'fro');
+        Dist(i,j) = norm((log(squeeze(FC_cov(:,:,i)))-log(squeeze(FC_cov(:,:,j)))), 'fro');
     end
 end
 
 % to check that distance matrix looks reasonable
 % figure; imagesc(D_fro); axis square; colorbar
-save([outputdir '/D_Fro.mat'], 'D_fro')
+save([outputdir '/Kernel_static_Fro.mat'], 'Dist')
 
 end
