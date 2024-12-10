@@ -4,9 +4,9 @@ function [Kernel, features, D] = build_kernels_main(HMM_name, only_cov, Fn, Kn)
 % build kernels from HMMs (wrapper for hmm_kernel.m)
 %
 % Input: 
-%    Fn: select embedding: 1 for naive (no embedding), 2 for 
-%        naive norm (normalised parameters across subjects), 3 for
-%        gradient embedding (Fisher kernel)
+%    Fn: select embedding: 1 for gradient embedding (Fisher kernel), 
+%        2 for naive (no embedding), 3 for naive norm (normalised 
+%        parameters across subjects)
 %    Kn: select kernel shape: 1 for linear, 2 for Gaussian
 % 
 % Output:
@@ -52,10 +52,10 @@ end
 K_options.sigma = true;
 
 % set which kernel to build:
-types = {'naive', 'naive_norm', 'Fisher'};
+types = {'Fisher', 'naive', 'naive_norm'};
 shapes = {'linear', 'Gaussian'};
 
-K_options.type = types{Fn}; % one of 'naive', 'naive_norm', or 'Fisher'
+K_options.type = types{Fn}; % one of 'Fisher', 'naive', or 'naive_norm'
 K_options.shape = shapes{Kn};
 
 if ~isdir(outputdir); mkdir(outputdir); end

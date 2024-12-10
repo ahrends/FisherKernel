@@ -1,4 +1,4 @@
-function results = SelectedEdges(varN, iterN)
+function results = predict_selectededges(varN, iterN)
 %% 
 % Selected Edges method for predicting from time-averaged FC matrices, as
 % described in Rosenberg et al. 2018 & Shen et al. 2018
@@ -225,6 +225,6 @@ results.YD = YD;
 results.avcorr = mean(results.kcorr);
 results.avcorr_deconf = mean(results.kcorr_deconf);
 
-save([outputdir '/SelectedEdges_varN' num2str(varN) '_iterN' num2str(iterN) '.mat'], 'results')
+save([outputdir '/Results_ SelectedEdges_varN' num2str(varN) '_iterN' num2str(iterN) '.mat'], 'results')
 
 end
