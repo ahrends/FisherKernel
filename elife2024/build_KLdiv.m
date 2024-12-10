@@ -1,9 +1,9 @@
 function build_KLdiv()
 %% 
-% build KL divergence matrix based on time-varying model (HMM)
+% build symmetrised KL divergence matrix based on time-varying model (HMM)
 % This requires that the group-level HMM has been fitted to the
 % timecourses.
-% The distance matrix will be used in Gaussian kernel for KRR in main
+% The divergence matrix will be used in Gaussian kernel for KRR in main
 % prediction function
 %
 % Christine Ahrends, University of Oxford, 2024
@@ -25,15 +25,17 @@ load([datadir '/tc1001_restall.mat']) % data_X
 HMM_name = 'HMM_allsess';
 load([outputdir '/HMMs/' HMM_name '.mat']) % HMM
 
+%% compute divergence matrix
+
 S = size(data_X,1); % number of subjects
 T = cell(S,1); % make cell containing the number of timepoints for each session (same as when fitting the HMM, to define borders)
 for s = 1:S
     T{s} = size(data_X{s},1); 
 end
 
-Dist = computeDistMatrix(data_X, T, HMM.hmm);
+D = computeDistMatrix(data_X, T, HMM.hmm);
 
-save([outputdir '/Kernel_' HMM_name '_KLdiv.mat'], 'Dist');
+save([outputdir '/Kernel_' HMM_name '_KLdiv.mat'], 'D');
 
 
 end
