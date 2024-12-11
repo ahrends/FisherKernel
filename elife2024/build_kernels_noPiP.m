@@ -1,7 +1,9 @@
-function [Kernel, features, D] = build_kernels_main(HMM_name, only_cov, Fn, Kn)
+function [Kernel, features, D] = build_kernels_noPiP(HMM_name, only_cov, Fn, Kn)
 
 %%
-% build kernels from HMMs (wrapper for hmm_kernel.m)
+% build kernels from HMMs using only state parameters (no transition
+% probabilities and initial state probabilities)
+% (wrapper for hmm_kernel)
 %
 % Input: 
 %    HMM_name: file name of the HMM to be loaded
@@ -35,6 +37,11 @@ addpath(genpath(hmm_scriptdir));
 load([datadir '/tc1001_restall.mat']) % data_X
 load([hmmdir '/' HMM_name '_only_cov_' num2str(only_cov) '.mat']) % HMM
 
+%% load data (X: timecourses, Y: behavioural variable to be predicted)
+
+load([datadir '/tc1001_restall.mat'])
+load([projectdir '/scratch/Kernel/' HMM_name '.mat'])
+
 %% construct kernels and feature matrices from HMM
 
 % specify options for kernel construction:
@@ -43,16 +50,16 @@ load([hmmdir '/' HMM_name '_only_cov_' num2str(only_cov) '.mat']) % HMM
 %    P (transition probabilities)
 %    mu (state means)
 %    sigma (state covariances)
-% at the moment: use either a) Pi & P, b) Pi, P, and sigma, or c) Pi, P, mu, and sigma
+% here: remove Pi & P
 K_options = struct();
-K_options.Pi = true;
-K_options.P = true;
-if HMM.hmm.train.zeromean==0
-    K_options.mu = true;
+K_options.Pi = false;
+K_options.P = false;
+if HMM_allsess.hmm.train.zeromean==0
+    K_options.mu = false; 
 else
-    K_options.mu = false;
+    K_options.mu = true; % if not using covariance only, use mean vectors for kernel
 end
-K_options.sigma = true;
+K_options.sigma = true; 
 
 % set which kernel to build:
 types = {'Fisher', 'naive', 'naive_norm'};
@@ -63,14 +70,13 @@ K_options.shape = shapes{Kn};
 
 if ~isdir(outputdir); mkdir(outputdir); end
 
-% build kernel and feature matrices
 if Kn==2
     [Kernel, features, D] = hmm_kernel(data_X, HMM.hmm, K_options);
-    save([outputdir '/Kernel_' HMM_name '_only_cov' num2str(only_cov) '_' types{Fn} '_' shapes{Kn} '.mat'], 'Kernel', 'features', 'D');
+    save([outputdir '/Kernel_noPiP_' HMM_name '_only_cov' num2str(only_cov) '_' types{Fn} '_' shapes{Kn} '.mat'], 'Kernel', 'features', 'D');
     
 else
     [Kernel, features] = hmm_kernel(data_X, HMM.hmm, K_options);
-    save([outputdir '/Kernel_' HMM_name '_only_cov' num2str(only_cov) '_' types{Fn} '_' shapes{Kn} '.mat'], 'Kernel', 'features');
+    save([outputdir '/Kernel_noPiP_' HMM_name '_only_cov' num2str(only_cov) '_' types{Fn} '_' shapes{Kn} '.mat'], 'Kernel', 'features');
 end
 
 end
