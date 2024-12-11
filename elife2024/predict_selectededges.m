@@ -225,6 +225,11 @@ results.YD = YD;
 results.avcorr = mean(results.kcorr);
 results.avcorr_deconf = mean(results.kcorr_deconf);
 
-save([outputdir '/Results_ SelectedEdges_varN' num2str(varN) '_iterN' num2str(iterN) '.mat'], 'results')
+% naming results files for consistency with other methods:
+only_cov = 0;
+type = 'selectededges';
+shape = 'linear';
+
+save([outputdir '/Results_only_cov' num2str(only_cov) '_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'results')
 
 end
