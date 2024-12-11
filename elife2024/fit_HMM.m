@@ -4,6 +4,10 @@ function HMM = fit_HMM(only_cov, k)
 % fit a group-level HMM to the HCP resting state fMRI data.
 % This uses a Gaussian observation model, either using the mean or pinning
 % it to 0 (only_cov).
+% Wrapper for hmmmar.
+% 
+% Dependencies:
+% HMM-MAR toolbox: https://github.com/OHBA-analysis/HMM-MAR
 % 
 % Input:
 %    only_cov: should be either 1 (to model states using only covariance) or 0
