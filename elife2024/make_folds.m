@@ -37,7 +37,7 @@ target_ind = ismember(all_vars(:,1), int_vars(:,1));
 
 Yin = pred_age(target_ind);
 index = ~isnan(Yin);
-Yin = Yin(index,:); % use any Yin to make folds
+Yin = Yin(index,:); % there should not be NaNs for age (just double-checking)
 
 % get family structure
 make_HCPfamilystructure; % create variable twins to hold family structure
