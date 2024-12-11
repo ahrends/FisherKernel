@@ -1,5 +1,6 @@
 function D = build_logEuclidean(FC_cov)
-%% 
+% D = build_logEuclidean(FC_cov)
+% 
 % build log Euclidean distance matrix
 % This is the Frobenius norm of the logarithm map of the time-averaged 
 % covariance matrices (Jayasumana et al., arXiv 2013)

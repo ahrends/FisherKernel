@@ -1,5 +1,6 @@
 function results = predict_selectededges(varN, iterN)
-%% 
+% results = predict_selectededges(varN, iterN)
+%
 % Selected Edges method for predicting from time-averaged FC matrices, as
 % described in Rosenberg et al. 2018 & Shen et al. 2018
 % main prediction part adapted from https://www.nitrc.org/projects/bioimagesuite/behavioralprediction.m

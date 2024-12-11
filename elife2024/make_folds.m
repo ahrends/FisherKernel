@@ -1,6 +1,6 @@
 function folds = make_folds(n_reps, k)
-
-%%
+% folds = make_folds(n_reps, k)
+%
 % make randomised repetitions of k folds for CV of 1001 HCP subjects, 
 % taking into account family structure and saving folds to be used by
 % prediction methods

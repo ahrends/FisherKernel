@@ -1,5 +1,5 @@
-function [Kernel, feat, Dist] = hmm_kernel(X_all, hmm, options)
-% [Kernel, feat, Dist] = hmm_kernel(X_all, hmm, options)
+function [Kernel, feat, D] = hmm_kernel(X_all, hmm, options)
+% [Kernel, feat, D] = hmm_kernel(X_all, hmm, options)
 %
 % Computes a kernel, feature matrix, and/or distance matrix from HMMs.
 % Implemented for linear and Gaussian versions of Fisher kernel & "naive"
@@ -22,16 +22,17 @@ function [Kernel, feat, Dist] = hmm_kernel(X_all, hmm, options)
 % + shape:  which shape of kernel, one of either 'linear' or 'Gaussian'
 % + normalisation:
 %           (optional) how to normalise features, e.g. 'L2-norm'
+% + pca:    reduce state features using PCA to match dimensions of
+%           transition features
 %
 % OUTPUT:
 % Kernel:   Kernel specified by options.type and options.shape (matrix 
-%           of size samples x samples), e.g. for options.type='Fisher' 
-%           and options.shape = 'linear', this is the linear Fisher kernel
+%           of size samples x samples)
 % feat:     features from which kernel was constructed (matrix of size
 %           samples x features), e.g. for options.type='Fisher', this
 %           will be the gradients of the log-likelihood of each subject
 %           w.r.t. to the specified parameters (i.e. Fisher scores)
-% Dist:     Distance matrix for Gaussian kernel (matrix of size samples x
+% D:        Distance matrix for Gaussian kernel (matrix of size samples x
 %           samples)
 %
 % Christine Ahrends, Aarhus University (2022)
@@ -57,14 +58,34 @@ if strcmpi(shape, 'Gaussian')
     end
 end
 
+if isfield(options, 'pca')
+    do_pca = true;
+else
+    do_pca = false;
+end
+
 S = size(X_all,1);
-K = hmm.K;
+Kernel = hmm.K;
 N = hmm.train.ndim;
-feat = zeros(S, (options.Pi*K + options.P*K*K + options.mu*K*N + options.sigma*K*N*N));
+if ~do_pca
+    feat = zeros(S, (options.Pi*Kernel + options.P*Kernel*Kernel + options.mu*Kernel*N + options.sigma*Kernel*N*N));
+else
+    feat_tmp = zeros(S, (options.Pi*Kernel + options.P*Kernel*Kernel + options.mu*Kernel*N + options.sigma*Kernel*N*N));
+    nPCs = options.Pi*Kernel + options.P*Kernel*Kernel;
+    feat = zeros(S, (options.Pi*Kernel + options.P*Kernel*Kernel + nPCs));
+end
 
 % get features (compute gradient if requested)
-for s = 1:S
-    [~, feat(s,:)] = hmm_gradient(X_all{s}, hmm, options); % if options.type='naive' or 'naive_normalised', this does not compute the gradient, but simply does dual estimation and vectorises the subject-level parameters
+if ~do_pca
+    for s = 1:S
+        [~, feat(s,:)] = hmm_gradient(X_all{s}, hmm, options); % if options.type='vectorised', this does not compute the gradient, but simply does dual estimation and vectorises the subject-level parameters
+    end
+else
+    for s = 1:S
+        [~, feat_tmp(s,:)] = hmm_gradient(X_all{s}, hmm, options);
+    end
+    [~, pcs] = pca(feat_tmp(:,options.Pi*Kernel + options.P*Kernel*Kernel+1:end), 'NumComponents', nPCs, 'Centered', false);
+    feat = [feat_tmp(:, 1:options.Pi*Kernel + options.P*Kernel*Kernel), pcs];
 end
 %
 % NOTE: features will be in embedded space (e.g. embedded lags &
@@ -81,12 +102,13 @@ if strcmpi(shape, 'linear')
     
 elseif strcmpi(shape, 'Gaussian')
     % get norm of feature vectors
+    D = zeros(S);
     for i =1:S
         for j = 1:S
-            Dist(i,j) = sqrt(sum(abs(feat(i,:)-feat(j,:)).^2)).^2;
+            D(i,j) = sqrt(sum(abs(feat(i,:)-feat(j,:)).^2)).^2;
         end
     end
-    Kernel = exp(-Dist/(2*tau^2));
+    Kernel = exp(-D/(2*tau^2));
 end
 
 end

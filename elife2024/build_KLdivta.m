@@ -1,6 +1,6 @@
 function D = build_KLdivta(data, N, ts)
-
-%% 
+% D = build_KLdivta(data, N, ts)
+%
 % build symmetrised KL divergence matrix based on time-averaged model (single-state HMM)
 % The divergence matrix will be used in Gaussian kernel for KRR in main
 % prediction function

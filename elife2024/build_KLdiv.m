@@ -1,6 +1,6 @@
 function D = build_KLdiv(HMM_name, only_cov)
-
-%% 
+% D = build_KLdiv(HMM_name, only_cov)
+%
 % build symmetrised KL divergence matrix based on time-varying model (HMM)
 % This requires that the group-level HMM has been fitted to the
 % timecourses.

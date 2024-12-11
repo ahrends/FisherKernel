@@ -1,6 +1,6 @@
 function [resultsT, featsets_resultsT, CV_resultsT] = collect_results()
-
-%%
+% [resultsT, featsets_resultsT, CV_resultsT] = collect_results()
+%
 % assemble results from all methods & runs into tables for stats testing &
 % figures
 % Tables are written out as csv
@@ -95,7 +95,7 @@ writetable(resultsT, [outputdir '/MAINresultsT.csv'])
 %% Results feature sets:
 
 all_types = {'Fisher', 'naive', 'naive_norm'};
-all_featsets = {'full', 'noPiP', 'nostates', 'PCA'};
+all_featsets = {'full', 'noPiP', 'nostates', 'PCAstates'};
 
 nmethods = numel(all_types);
 nfeatsets = numel(all_featsets);

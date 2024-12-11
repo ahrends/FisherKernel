@@ -1,6 +1,6 @@
 function [Kernel, features, D] = build_kernels_main(HMM_name, only_cov, Fn, Kn)
-
-%%
+% [Kernel, features, D] = build_kernels_main(HMM_name, only_cov, Fn, Kn)
+%
 % build kernels from HMMs (wrapper for hmm_kernel.m)
 %
 % Input: 
@@ -13,7 +13,7 @@ function [Kernel, features, D] = build_kernels_main(HMM_name, only_cov, Fn, Kn)
 %    Kn: select kernel shape: 1 for linear, 2 for Gaussian
 % 
 % Output:
-%    Kernel: the subject x subject kernel
+%    Kernel: the samples x samples kernel
 %    features: the embedded features used to construct the kernel
 %    D: Distance matrix (only for Gaussian kernels)
 %

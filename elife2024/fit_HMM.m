@@ -1,6 +1,6 @@
 function HMM = fit_HMM(only_cov, k)
-
-%%
+% HMM = fit_HMM(only_cov, k)
+%
 % fit a group-level HMM to the HCP resting state fMRI data.
 % This uses a Gaussian observation model, either using the mean or pinning
 % it to 0 (only_cov).

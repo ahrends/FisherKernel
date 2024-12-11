@@ -1,6 +1,6 @@
 function FC_cov = make_staticFCcov(datadir, n_sess)
-
-%%
+% FC_cov = make_staticFCcov(datadir, n_sess)
+%
 % make subject-wise static FC (covariance) matrices for HCP rsFMRI
 % This script uses groupICA50 parcellation
 % Requires that both the behavioural data and the timecourses in groupICA50

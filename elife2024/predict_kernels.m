@@ -1,4 +1,5 @@
 function results = predict_kernels(only_cov,varN,iterN,Fn,Kn)
+% results = predict_kernels(only_cov,varN,iterN,Fn,Kn)
 %
 % runs kernel ridge regression to predict behavioural variables (here age
 % and intelligence in HCP dataset) using different embeddings/kernels

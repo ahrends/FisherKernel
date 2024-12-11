@@ -1,7 +1,8 @@
-function [Kernel, features, D] = build_kernels_nostates(HMM_name, only_cov, Fn, Kn)
-% [Kernel, features, D] = build_kernels_nostates(HMM_name, only_cov, Fn, Kn)
-%
-% build kernels from HMMs using only transition parameters (no state parameters)
+function [Kernel, features, D] = build_kernels_PCAstates(HMM_name, only_cov, Fn, Kn)
+% [Kernel, features, D] = build_kernels_PCAstates(HMM_name, only_cov, Fn, Kn)
+% 
+% build kernels from HMMs using PCA-reduced state parameters and transition
+% probabilities/initial state probabilities
 % (wrapper for hmm_kernel)
 %
 % Input: 
@@ -14,7 +15,7 @@ function [Kernel, features, D] = build_kernels_nostates(HMM_name, only_cov, Fn, 
 %    Kn: select kernel shape: 1 for linear, 2 for Gaussian
 % 
 % Output:
-%    Kernel: the subject x subject kernel
+%    Kernel: the samples x samples kernel
 %    features: the embedded features used to construct the kernel
 %    D: Distance matrix (only for Gaussian kernels)
 %
@@ -44,12 +45,18 @@ load([hmmdir '/' HMM_name '_only_cov_' num2str(only_cov) '.mat']) % HMM
 %    P (transition probabilities)
 %    mu (state means)
 %    sigma (state covariances)
-% here: remove mu & sigma
+% here: use all features but add PCA dimensionality reduction for state
+% features
 K_options = struct();
+K_options.pca = true; % do PCA for state features
 K_options.Pi = true;
 K_options.P = true;
-K_options.mu = false;
-K_options.sigma = false; 
+if HMM_allsess.hmm.train.zeromean==0
+    K_options.mu = false; 
+else
+    K_options.mu = true;
+end
+K_options.sigma = true; 
 
 % set which kernel to build:
 types = {'Fisher', 'naive', 'naive_norm'};
@@ -62,10 +69,10 @@ if ~isdir(outputdir); mkdir(outputdir); end
 
 if Kn==2
     [Kernel, features, D] = hmm_kernel(data_X, HMM.hmm, K_options);
-    save([outputdir '/Kernel_nostates_' HMM_name '_only_cov' num2str(only_cov) '_' types{Fn} '_' shapes{Kn} '.mat'], 'Kernel', 'features', 'D');
+    save([outputdir '/Kernel_PCAstates_' HMM_name '_only_cov' num2str(only_cov) '_' types{Fn} '_' shapes{Kn} '.mat'], 'Kernel', 'features', 'D');
 else
     [Kernel, features] = hmm_kernel(data_X, HMM.hmm, K_options);
-    save([outputdir '/Kernel_nostates_' HMM_name '_only_cov' num2str(only_cov) '_' types{Fn} '_' shapes{Kn} '.mat'], 'Kernel', 'features');
+    save([outputdir '/Kernel_PCAstates_' HMM_name '_only_cov' num2str(only_cov) '_' types{Fn} '_' shapes{Kn} '.mat'], 'Kernel', 'features');
 end
 
 end

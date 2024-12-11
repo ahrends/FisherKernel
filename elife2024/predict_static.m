@@ -1,6 +1,6 @@
 function results = predict_static(varN, iterN, EN, Riem)
-
-%%
+% results = predict_static(varN, iterN, EN, Riem)
+%
 % Prediction using (non-kernelised) static FC features with Ridge 
 % regression/Elastic Net. Output is fold-wise.
 % Wrapper for nets_predict5_kfold
