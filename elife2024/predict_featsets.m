@@ -1,5 +1,5 @@
-function results = predict_kernels(HMM_name, only_cov,varN,iterN,Fn,Kn)
-% results = predict_kernels(HMM_name, only_cov,varN,iterN,Fn,Kn)
+function results = predict_featsets(HMM_name, only_cov,varN,iterN,Fn,Kn,FSn)
+% results = predict_featsets_noPiP(HMM_name, only_cov,varN,iterN,Fn,Kn)
 %
 % runs kernel ridge regression to predict behavioural variables (here age
 % and intelligence in HCP dataset) using different embeddings/kernels
@@ -14,10 +14,10 @@ function results = predict_kernels(HMM_name, only_cov,varN,iterN,Fn,Kn)
 %    varN: variable number (1 for age, 2:35 for intelligence variables)
 %    iterN: iteration number (to load pre-defined folds)
 %    Fn: select embedding (1 for Fisher, 2 for naive, 3 for naive
-%       normalised, 4 for KL divergence (time-varying), 5 for KL divergence
-%       (time-averaged), 6 for log-Euclidean)
-%    Kn: select shape of kernel (1 for linear, 2 for Gaussian)
-%       Note: For KL divergence and log-Euclidean use only Gaussian kernel
+%       normalised)
+%    Kn: select kernel shape (1 for linear, 2 for Gaussian)
+%    FSn: select feature set (1 for no transition features, 2 for no state
+%       features, 3 for PCA-reduced state features)
 %
 % OUTPUT:
 %    results: struct containing results
@@ -86,16 +86,18 @@ for jj = 1:numel(missing_subs)
 end
 
 % embeddings and combinations for kernel ridge regression
-all_types = {'Fisher', 'naive', 'naive_norm', 'KL', 'KL_ta', 'Fro'};
+all_types = {'Fisher', 'naive', 'naive_norm'};
 all_shapes = {'linear', 'Gaussian'};
+all_featsets = {'noPiP', 'nostates', 'PCAstates'};
 
 type = all_types{Fn};
 shape = all_shapes{Kn};
+featureset = all_featsets{FSn};
 
 %% main prediction
 % make sure to only run this combination if it does not exist already (for
 % interrupted runs)
-if ~exist([outputdir '/Results_only_cov' num2str(only_cov) '_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'file')
+if ~exist([outputdir '/Results_' featureset '_only_cov' num2str(only_cov) '_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'file')
     
     % initialise empty structures to hold results
     results = struct();
@@ -103,22 +105,13 @@ if ~exist([outputdir '/Results_only_cov' num2str(only_cov) '_' type '_' shape '_
     results.predictedYD = NaN(size(Yin));
     results.YD = NaN(size(Yin));
     
-    % load preconstructed kernels (for linear kernels) or
-    % distance/divergence matrices (for Gaussian kernels)
-    if strcmpi(type, 'KL') % load time-varying KL divergence divergence matrix
-        load([kerneldir '/Kernel_' HMM_name '_only_cov_' num2str(only_cov) '_KLdiv.mat'], 'D'); 
-    elseif strcmpi(type, 'KL_ta') % load time-averaged KL divergence matrix
-        load([kerneldir '/Kernel_static_KLta.mat'])
-    elseif strcmpi(type, 'Fro') % load log-Euclidean distance matrix
-        load([kerneldir '/Kernel_static_Fro.mat']);
-    else % main time-varying kernels
-        if strcmpi(shape, 'linear')
-            load([kerneldir '/Kernel_' HMM_name '_only_cov_' num2str(only_cov) '_' type '_' shape '.mat'], 'Kernel'); % load kernel
-        elseif strcmpi(shape, 'gaussian')
-            load([kerneldir '/Kernel_' HMM_name '_only_cov_' num2str(only_cov) '_' type '_' shape '.mat'], 'D'); % load distance matrix
-        end
+    % load preconstructed kernels (for linear kernels)
+    if strcmpi(shape, 'linear')
+        load([kerneldir '/Kernel_' featureset '_' HMM_name '_only_cov' num2str(only_cov) '_' type '_' shape '.mat'], 'Kernel'); % load kernel
+    elseif strcmpi(shape, 'Gaussian')
+        load([kerneldir '/Kernel_' featureset '_' HMM_name '_only_cov' num2str(only_cov) '_' type '_' shape '.mat'], 'D'); % load distance matrix
     end
-    
+
     for iii = 1:nfolds 
 
         % specify options for kernel ridge regression
@@ -163,9 +156,9 @@ if ~exist([outputdir '/Results_only_cov' num2str(only_cov) '_' type '_' shape '_
     results.avcorr = corr(results.predictedY, Yin); % correlation coefficient in original space across folds
     results.avcorr_deconf = corr(results.predictedYD, results.YD); % correlation coefficient in deconfounded space across folds
         
-    % write results to outputdir
+    % write results to outputdir    
     if ~isdir(outputdir); mkdir(outputdir); end
-    save([outputdir '/Results_only_cov' num2str(only_cov) '_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'results');
+    save([outputdir '/Results_' featureset '_only_cov' num2str(only_cov) '_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'results');
     
 end
 end
