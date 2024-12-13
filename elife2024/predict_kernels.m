@@ -114,7 +114,7 @@ if ~exist([outputdir '/Results_only_cov' num2str(only_cov) '_' type '_' shape '_
     else % main time-varying kernels
         if strcmpi(shape, 'linear')
             load([kerneldir '/Kernel_' HMM_name '_only_cov_' num2str(only_cov) '_' type '_' shape '.mat'], 'Kernel'); % load kernel
-        elseif strcmpi(shape, 'gaussian')
+        elseif strcmpi(shape, 'Gaussian')
             load([kerneldir '/Kernel_' HMM_name '_only_cov_' num2str(only_cov) '_' type '_' shape '.mat'], 'D'); % load distance matrix
         end
     end

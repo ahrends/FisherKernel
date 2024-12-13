@@ -1,11 +1,11 @@
-function results = predict_featsets(HMM_name, only_cov,varN,iterN,Fn,Kn,FSn)
-% results = predict_featsets_noPiP(HMM_name, only_cov,varN,iterN,Fn,Kn)
-%
+function results = predict_trainscheme(HMM_name,only_cov,varN,iterN,Fn,Kn,CVn)
+% results = predict_trainscheme(HMM_name,only_cov,varN,iterN,Fn,Kn,cv)
+% 
 % runs kernel ridge regression to predict behavioural variables (here age
 % and intelligence in HCP dataset) using different embeddings/kernels
 % from HMM parameters as predictors. This function constructs kernels from
-% different feature sets (only state features, only transition features, or
-% PCA-reduced state features).
+% HMMs trained either on only the training subjects or both training and
+% test sets.
 % wrapper for predictPhenotype_kernels_kfolds
 % (split into small jobs for cluster)
 %
@@ -18,8 +18,8 @@ function results = predict_featsets(HMM_name, only_cov,varN,iterN,Fn,Kn,FSn)
 %    Fn: select embedding (1 for Fisher, 2 for naive, 3 for naive
 %       normalised)
 %    Kn: select kernel shape (1 for linear, 2 for Gaussian)
-%    FSn: select feature set (1 for no transition features, 2 for no state
-%       features, 3 for PCA-reduced state features)
+%    cv: 1 to run on HMMs run only on training set, 0 to run on HMMs run on
+%       both training and test set
 %
 % OUTPUT:
 %    results: struct containing results
@@ -35,7 +35,7 @@ function results = predict_featsets(HMM_name, only_cov,varN,iterN,Fn,Kn,FSn)
 %        avcorr: correlation between predicted and true Y across folds in original space
 %        avcorr_deconf: "-" in deconfounded space
 %
-% Christine Ahrends, Aarhus University 2022
+% Christine Ahrends, University of Oxford 2024
 %
 %% Preparation
 
@@ -77,7 +77,7 @@ twins = twins(index, index); % remove subjects with missing values from family s
 
 % load pre-defined folds for CV (here 100 repetitions of 10 folds)
 nfolds = 10;
-load([kerneldir '/folds.mat']) % folds
+load([kerneldir '/HMMfolds.mat']) % folds that were used to train 10 separate HMMs (11th HMM is trained on all subjects)
 % IMPORTANT!! remove Nan subjects from folds and update the indices!!
 for jj = 1:numel(missing_subs)
     snan = missing_subs(jj);
@@ -90,31 +90,41 @@ end
 % embeddings and combinations for kernel ridge regression
 all_types = {'Fisher', 'naive', 'naive_norm'};
 all_shapes = {'linear', 'Gaussian'};
-all_featsets = {'noPiP', 'nostates', 'PCAstates'};
 
 type = all_types{Fn};
 shape = all_shapes{Kn};
-featureset = all_featsets{FSn};
 
-%% main prediction
-% make sure to only run this combination if it does not exist already (for
-% interrupted runs)
-if ~exist([outputdir '/Results_' featureset '_only_cov' num2str(only_cov) '_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'file')
-    
+if CVn==1
+    cvstr = 'sep'; % separate subjects before training HMM
+elseif CVn==0
+    cvstr = 'tog'; % separate subjects after training HMM
+end
+
+%%
+if ~exist([outputdir '/Results_' cvstr '_only_cov' num2str(only_cov) '_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'file')
+
     % initialise empty structures to hold results
     results = struct();
     results.predictedY = NaN(size(Yin));
     results.predictedYD = NaN(size(Yin));
     results.YD = NaN(size(Yin));
     
-    % load preconstructed kernels (for linear kernels)
-    if strcmpi(shape, 'linear')
-        load([kerneldir '/Kernel_' featureset '_' HMM_name '_only_cov' num2str(only_cov) '_' type '_' shape '.mat'], 'Kernel'); % load kernel
-    elseif strcmpi(shape, 'Gaussian')
-        load([kerneldir '/Kernel_' featureset '_' HMM_name '_only_cov' num2str(only_cov) '_' type '_' shape '.mat'], 'D'); % load distance matrix
+    if CVn == 0 % if not doing cross-validated HMM kernel, simply load the full kernels (or distance matrices for Gaussian kernel)
+        if strcmpi(shape, 'linear')
+            load([kerneldir '/Kernel_' HMM_name '_only_cov_' num2str(only_cov) '_' type '_' shape '.mat'], 'Kernel'); % load kernel
+        elseif strcmpi(shape, 'Gaussian')
+            load([kerneldir '/Kernel_' HMM_name '_only_cov_' num2str(only_cov) '_' type '_' shape '.mat'], 'D'); % load distance matrix
+        end
     end
-
-    for iii = 1:nfolds 
+    
+    for iii = 1:nfolds % fold-wise: if not doing cross-validated HMM kernel, start splitting into folds here for prediction, otherwise load separate kernels only here and then predict
+        if CVn==1 % if doing cross-validated HMM kernel, load separate kernels for all 10 folds here:
+            if strcmpi(shape, 'linear')
+                load([kerneldir '/Kernel_' HMM_name '_only_cov_' num2str(only_cov) '_leaveout_foldN' num2str(iii) '_' type '_' shape '.mat'], 'Kernel'); % load kernel
+            elseif strcmpi(shape, 'Gaussian')
+                load([kerneldir '/Kernel_' HMM_name '_only_cov_' num2str(only_cov) '_leaveout_foldN' num2str(iii) '_' type '_' shape '.mat'], 'D'); % load distance matrix
+            end
+        end
 
         % specify options for kernel ridge regression
         krr_params = struct();
@@ -160,7 +170,7 @@ if ~exist([outputdir '/Results_' featureset '_only_cov' num2str(only_cov) '_' ty
         
     % write results to outputdir    
     if ~isdir(outputdir); mkdir(outputdir); end
-    save([outputdir '/Results_' featureset '_only_cov' num2str(only_cov) '_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'results');
+    save([outputdir '/Results_' cvstr '_only_cov' num2str(only_cov) '_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'results');
     
 end
 end
