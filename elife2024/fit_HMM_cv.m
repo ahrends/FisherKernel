@@ -1,17 +1,22 @@
-function HMM = fit_HMM(HMM_name, only_cov, k)
-% HMM = fit_HMM(only_cov, k)
+function HMM = fit_HMM_cv(leaveout_foldN, iterN, only_cov, k)
+% HMM = fit_HMM_cv(leaveout_foldN, only_cov, k)
 %
 % fit a group-level HMM to the HCP resting state fMRI data.
 % This uses a Gaussian observation model, either using the mean or pinning
-% it to 0 (only_cov).
+% it to 0 (only_cov). This function loads pre-defined folds and fits the
+% HMM to all but the specified fold (used later for testing the model).
 % Wrapper for hmmmar.
 % 
 % Dependencies:
 % HMM-MAR toolbox: https://github.com/OHBA-analysis/HMM-MAR
 % 
 % Input:
+%    leaveout_foldN: fold number used later for testing the model (leave
+%       out during HMM training)
+%    iterN: iteration number for folds (assuming folds were made using
+%       make_folds)
 %    only_cov: should be either 1 (to model states using only covariance) or 0
-%    (to use both mean and covariance) 
+%       (to use both mean and covariance) 
 %    k: number of HMM states
 % 
 % Output:
@@ -23,7 +28,7 @@ function HMM = fit_HMM(HMM_name, only_cov, k)
 %       vpath: Viterbi path (timepoints x 1 vector)
 %       fehist: Free Energy history to check model inference
 %
-% Christine Ahrends, Aarhus University, 2022
+% Christine Ahrends, University of Oxford, 2024
 
 %% Preparation
 
@@ -31,6 +36,7 @@ function HMM = fit_HMM(HMM_name, only_cov, k)
 scriptdir = '/path/to/code';
 hmm_scriptdir = '/path/to/HMM-MAR-master';
 datadir = '/path/to/data';
+kerneldir = '/path/to/kernels'; % this should contain the pre-defined folds
 hmmdir = '/path/to/hmm';
 
 if ~isdir(hmmdir); mkdir(hmmdir); end
@@ -59,7 +65,15 @@ int_vars = vars_target_with_IDs;
 clear vars_target_with_IDs
 target_ind = ismember(all_vars(:,1), int_vars(:,1)); % subject indices
 
-data_X = data(target_ind); % remove subjects for which none of the behavioural variables are available
+n_folds = 10;
+load([kerneldir '/HMM_folds.mat']) % load pre-defined folds
+train_folds = folds{iterN}(1:end ~= leaveout_foldN);
+train_ind = [];
+for i = 1:(n_folds-1)
+    train_ind = [train_ind, train_folds{i}];
+end
+
+data_X = data(train_ind);
 clear data all_vars headers_grouped_category int_vars
 
 S = size(data_X,1);
@@ -84,6 +98,6 @@ hmm_options.useParallel = 0;
 % fit group-level HMM 
 [HMM.hmm, HMM.Gamma, HMM.Xi, HMM.vpath, ~, ~, HMM.fehist] = hmmmar(data_X, T, hmm_options);
 
-save([hmmdir '/' HMM_name '_only_cov' num2str(only_cov) '.mat'], 'HMM')
+save([hmmdir '/' HMM_name '_only_cov' num2str(only_cov) '_leaveout_foldN' num2str(leaveout_foldN) '_iterN' num2str(iterN) '.mat'], 'HMM')
 
 end
