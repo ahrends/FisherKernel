@@ -10,6 +10,8 @@ function HMM = fit_HMM(HMM_name, only_cov, k)
 % HMM-MAR toolbox: https://github.com/OHBA-analysis/HMM-MAR
 % 
 % Input:
+%    HMM_name: root name for HMMs to be recognised by kernel-builder
+%       functions
 %    only_cov: should be either 1 (to model states using only covariance) or 0
 %    (to use both mean and covariance) 
 %    k: number of HMM states

@@ -1,4 +1,4 @@
-function HMM = fit_HMM_cv(leaveout_foldN, iterN, only_cov, k)
+function HMM = fit_HMM_cv(HMM_name, leaveout_foldN, iterN, only_cov, k)
 % HMM = fit_HMM_cv(leaveout_foldN, only_cov, k)
 %
 % fit a group-level HMM to the HCP resting state fMRI data.
@@ -11,6 +11,8 @@ function HMM = fit_HMM_cv(leaveout_foldN, iterN, only_cov, k)
 % HMM-MAR toolbox: https://github.com/OHBA-analysis/HMM-MAR
 % 
 % Input:
+%    HMM_name: root name for HMMs to be recognised by kernel-builder
+%       functions
 %    leaveout_foldN: fold number used later for testing the model (leave
 %       out during HMM training)
 %    iterN: iteration number for folds (assuming folds were made using
