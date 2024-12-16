@@ -26,7 +26,7 @@ function [X, HMM, features, Kernel, err] = simulate_statemeans(HMM_name, n_subj,
 %       samples kernel matrix
 %    err: error in recovering the ground truth group labels in the test set
 %
-% Christine Ahrends, Aarhus University & MIT, 2023
+% Christine Ahrends, Aarhus University, 2023
 
 %% Preparation
 
@@ -35,7 +35,6 @@ datadir = '/path/to/data'; % this should contain the timeseries (time x regions)
 hmmdir = '/path/to/hmm'; % this should contain a trained HMM (HMM_name) used as a basis for the simulations
 scriptdir = '/path/to/code';
 hmm_scriptdir = '/path/to/HMM-MAR-master';
-outputdir = '/path/to/results';
 
 addpath(scriptdir)
 addpath(genpath(hmm_scriptdir))
@@ -131,8 +130,5 @@ for kk = 1:3
     [est_labels, ~] = predict(svm, test_feat); % predicted labels
     err(kk,1) = sum(est_labels ~= Y_test) ./numel(Y_test); % error on test set
 end
-
-if ~isdir(outputdir); mkdir(outputdir); end
-save([outputdir '/Simulations_statemeans_nsubj' num2str(n_subj) '_betwgroup' num2str(betwgroup_diff) '.mat'], 'X', 'HMM', 'features', 'Kernel', 'err')
 
 end
