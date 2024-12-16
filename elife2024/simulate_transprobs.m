@@ -10,10 +10,7 @@ function [X, HMM, features, Kernel, err] = simulate_transprobs(HMM_name, n_subj,
 %       basis for generating synthetic timecourses)
 %    n_subj: number of subjects to simulate (group size will be half of
 %       this)
-%    betwgroup_diff: scalar for the between-group difference. Note that if
-%       this is chosen to be too large, the HMM will assign a new state to
-%       the second group and drop the other state rather than capturing the
-%       difference as a change in the same state
+%    betwgroup_diff: scalar for the between-group difference
 % 
 % Output:
 %    X: the synthetic timeseries, concatenated for the two groups
@@ -57,11 +54,12 @@ K = HMM.hmm.K; % number of states in example HMM
 %% simulate timecourses
 rng('shuffle')
         
-HMM_group1 = HMM_allsess;
+HMM_group1 = HMM;
 T_group1 = T(1:(n_subj/2)); % group 1 will be half the number of subjects simulated
 X_group1 = simhmmmar(T_group1, HMM_group1.hmm); % timecourses for group 1
 
 HMM_group2 = HMM_group1; % the basis for group 2 is the same HMM as group 1
+clear HMM 
 
 % to generate different transition probability matrices, randomly permute
 % some of the states' transition probability vectors, how many states
@@ -104,8 +102,8 @@ hmm_options.covtype = 'full'; %('full' for covariance, 'uniquefull' for no covar
 hmm_options.zeromean = 0; % (0 to model mean, 1 to model only covariance)
 hmm_options.standardise = 0; % not necessary here, since data are already standardised
 hmm_options.dropstates = 0;
-hmm_options.K = 6;
-hmm_options.useParallel = 1;
+hmm_options.K = K;
+hmm_options.useParallel = 0;
 
 % run HMM (group-level)
 [HMM.hmm, HMM.Gamma, HMM.Xi, HMM.vpath] = hmmmar(X, T, hmm_options);
@@ -141,11 +139,11 @@ features = cell(3,1); % initialise cell to hold features
 Kernel = cell(3,1); % initialise cell to hold kernels
 for kk = 1:3
     K_options.type = all_types{kk};
-    [Kernel{kk},features{kk}] = hmm_kernel(Xc, HMM.hmm, K_options);
+    [Kernel{kk},features{kk}] = hmm_kernel(Xc, HMM.hmm, K_options); % construct kernels and get feature matrices
     
     train_feat = features{kk}(train_ind,:);
     test_feat = features{kk}(test_ind,:);
-    Y_train = Y(train_ind,1); %binary variable
+    Y_train = Y(train_ind,1); 
     Y_test = Y(test_ind,1);
     
     % fit SVM to predict binary variable in test set from features
@@ -154,6 +152,7 @@ for kk = 1:3
     err(kk,1) = sum(est_labels ~= Y_test) ./numel(Y_test); % error on test set
 end
 
+if ~isdir(outputdir); mkdir(outputdir); end
 save([outputdir '/Simulations_transprobs_nsubj' num2str(n_subj) '_betwgroup' num2str(betwgroup_diff) '.mat'], 'X', 'HMM', 'features', 'Kernel', 'err')
 
 end
