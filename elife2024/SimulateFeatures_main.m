@@ -6,6 +6,9 @@
 % Uses simulate_statemeans, simulate_transprobs, and
 % simulate_transprobs_nostates
 %
+% Dependencies:
+% HMM-MAR toolbox: https://github.com/OHBA-analysis/HMM-MAR
+%
 % simulate:
 % 
 % 1. one state's mean different between groups, making sure that the
@@ -188,16 +191,16 @@ hold off;
 nexttile; imagesc(Kernel0_statemeans{1,3}); 
 xticklabels({''}); yticklabels({''}); colorbar('TickLabels', ''); axis square;
 title(['Naive norm. kernel, error: ' num2str(err_statemeans(1,3))])
-% Fischer kernel:
+% Fisher kernel:
 nexttile([1,2]); plot(feat_statemeans{1,1}(1:100,:)', '.b', 'MarkerSize', 1); hold on; 
 plot(feat_statemeans{1,1}(101,:)', '.r', 'MarkerSize', 1); 
 xticks([1, 7, 43, 343]); xticklabels({''}); xlim([1,size(feat_statemeans{1,1},2)]); 
 yticklabels({''}); ylim([-230,230]);
-title('Fischer scores, group1 vs. group2'); 
+title('Fisher scores, group1 vs. group2'); 
 hold off;
 nexttile; imagesc(Kernel0_statemeans{1,1}); 
 xticklabels({''}); yticklabels({''}); colorbar('TickLabels', ''); axis square;
-title(['Fischer kernel, error: ' num2str(err_statemeans(1,1))])
+title(['Fisher kernel, error: ' num2str(err_statemeans(1,1))])
 
 % Transition probabilities
 figure; 
@@ -222,16 +225,16 @@ hold off;
 nexttile; imagesc(Kernel0_transprobs{1,3}); 
 xticklabels({''}); yticklabels({''}); colorbar('TickLabels', ''); axis square;
 title(['Naive norm. kernel, error: ' num2str(err_transprobs(1,3))])
-% Fischer kernel:
+% Fisher kernel:
 nexttile([1,2]); plot(feat_transprobs{1,1}(1:100,:)', '.b', 'MarkerSize', 1); hold on;
 plot(feat_transprobs{1,1}(101,:)', '.r', 'MarkerSize', 1); 
 xticks([1, 7, 43, 343]); xticklabels({''}); xlim([1,size(feat_transprobs{1,1},2)]); 
 yticklabels({''}); ylim([-266,266]);
-title('Fischer scores, group1 vs. group2'); 
+title('Fisher scores, group1 vs. group2'); 
 holf off;
 nexttile; imagesc(Kernel0_transprobs{1,1}); 
 xticklabels({''}); yticklabels({''}); colorbar('TickLabels', ''); axis square;
-title(['Fischer kernel, error: ' num2str(err_transprobs(1,1))])
+title(['Fisher kernel, error: ' num2str(err_transprobs(1,1))])
 
 % Transition probabilities
 figure; 
@@ -256,14 +259,14 @@ hold off;
 nexttile; imagesc(Kernel0_transprobs_nostates{1,3}); 
 xticklabels({''}); yticklabels({''}); colorbar('TickLabels', ''); clim([20,100]); axis square;
 title(['Naive norm. kernel, error: ' num2str(err_transprobs_nostates(1,3))])
-% Fischer kernel:
+% Fisher kernel:
 nexttile([1,2]); plot(feat_transprobs_nostates{1,1}(1:100,:)', '.b', 'MarkerSize', 1); hold on;
 plot(feat_transprobs_nostates{1,1}(101,:)', '.r', 'MarkerSize', 1); 
 xticks([1, 7, 43, 343]); xticklabels({''}); xlim([1,size(feat_transprobs_nostates{1,1},2)]); 
 yticklabels({''}); ylim([-60,60]);
-title('Fischer scores, group 1 vs. group 2')
+title('Fisher scores, group 1 vs. group 2')
 hold off;
 nexttile; imagesc(Kernel0_transprobs_nostates{1,1}); 
 xticklabels({''}); yticklabels({''}); colorbar('TickLabels', ''); axis square;
-title(['Fischer kernel, error: ' num2str(err_transprobs_nostates(1,1))])
+title(['Fisher kernel, error: ' num2str(err_transprobs_nostates(1,1))])
 
