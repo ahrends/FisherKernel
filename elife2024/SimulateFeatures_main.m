@@ -135,23 +135,27 @@ end
 
 %% Figures
 
-% Error histograms:
+% Figure 4
+% Left panels: Error distribution across iterations
 figure;
+% Figure 4A (left): 
 subplot(1,3,1);
 [y, b] = hist(err_statemeans, 5);
 bar(b,y, 'grouped');
 legend({'Fisher kernel', 'Naive kernel', 'Naive norm. kernel'}); 
 title('Errors State Mean simulations'); xlim([0, 1]); xlabel('Errors'); axis square;
+% Figure 4B (left):
 subplot(1,3,2);
 [y, b] = hist(err_transprobs, 5);
 bar(b,y, 'grouped');
 title('Errors Transition probabilities simulations'); xlim([0, 1]); xlabel('Errors'); axis square;
+% Figure 4C (left):
 subplot(1,3,3);
 [y, b] = hist(err_transprobs_nostates, 5);
 bar(b,y, 'grouped');
 title('Errors Transition probabilities (no states) simulations'); xlim([0, 1]); xlabel('Errors'); axis square;
 
-% Example kernels and features for both groups: (here just plotting first
+% Right panels: Example kernels and features for both groups: (here just plotting first
 % iteration for each scenario)
 
 % set diagonal of kernels to nan for better visualisation:
@@ -168,7 +172,7 @@ for i = 1:n_iter
     end
 end
 
-% State means
+% Figure 4A (right): State means
 figure; 
 tiledlayout(3,3,'TileSpacing','loose','Padding','loose');
 % Naive kernel:
@@ -202,7 +206,7 @@ nexttile; imagesc(Kernel0_statemeans{1,1});
 xticklabels({''}); yticklabels({''}); colorbar('TickLabels', ''); axis square;
 title(['Fisher kernel, error: ' num2str(err_statemeans(1,1))])
 
-% Transition probabilities
+% Figure 4B (right): Transition probabilities
 figure; 
 tiledlayout(3,3,'TileSpacing','loose','Padding','loose');
 % Naive kernel:
@@ -236,7 +240,7 @@ nexttile; imagesc(Kernel0_transprobs{1,1});
 xticklabels({''}); yticklabels({''}); colorbar('TickLabels', ''); axis square;
 title(['Fisher kernel, error: ' num2str(err_transprobs(1,1))])
 
-% Transition probabilities
+% Figure 4C (right): Transition probabilities excluding state features
 figure; 
 tiledlayout(3,3,'TileSpacing','loose','Padding','loose');
 % Naive kernel:
