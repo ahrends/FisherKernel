@@ -5,6 +5,9 @@ function [X, HMM, features, Kernel, err] = simulate_statemeans(HMM_name, n_subj,
 % the mean vector of one HMM state, then construct kernels, classify, and
 % calculate error in recovering the ground truth
 %
+% Dependencies:
+% HMM-MAR toolbox: https://github.com/OHBA-analysis/HMM-MAR
+%
 % Input: 
 %    HMM_name: root file name of the HMM to be loaded (this will be the
 %       basis for generating synthetic timecourses)

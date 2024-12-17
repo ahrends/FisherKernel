@@ -5,6 +5,9 @@ function [X, HMM, features, Kernel, err] = simulate_transprobs(HMM_name, n_subj,
 % the transition probabilities, then construct kernels, classify, and
 % calculate error in recovering the ground truth
 %
+% Dependencies:
+% HMM-MAR toolbox: https://github.com/OHBA-analysis/HMM-MAR
+%
 % Input: 
 %    HMM_name: root file name of the HMM to be loaded (this will be the
 %       basis for generating synthetic timecourses)

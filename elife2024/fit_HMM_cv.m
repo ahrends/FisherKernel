@@ -1,5 +1,5 @@
 function HMM = fit_HMM_cv(HMM_name, leaveout_foldN, iterN, only_cov, k)
-% HMM = fit_HMM_cv(leaveout_foldN, only_cov, k)
+% HMM = fit_HMM_cv(HMM_name, leaveout_foldN, only_cov, k)
 %
 % fit a group-level HMM to the HCP resting state fMRI data.
 % This uses a Gaussian observation model, either using the mean or pinning

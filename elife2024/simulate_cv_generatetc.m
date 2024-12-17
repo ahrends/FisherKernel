@@ -5,11 +5,15 @@ function [X, Y_true] = simulate_cv_generatetc(HMM_name, n_train, n_test, betwgro
 % state's means, but with a group difference (heterogeneous training and
 % test set) related to another state's means. This will use states #1 and 
 % #2 from the example HMM, so any HMM with k>=2 will work.
+% 
+% Dependencies:
+% HMM-MAR toolbox: https://github.com/OHBA-analysis/HMM-MAR
 %
 % Input: 
 %    HMM_name: root file name of the HMM to be loaded (this will be the
 %       basis for generating synthetic timecourses)
 %    n_train: number of subjects to simulate for the training set
+%    n_test: number of subjects to simulate for the test set
 %    betwgroup_diff: scalar for the difference between the training and 
 %       test set. Note that if this is chosen to be too large, the HMM 
 %       will assign a new state to the second group and drop the other 

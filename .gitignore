@@ -2,3 +2,4 @@
 *.asv
 # ignore Matlab figures (remove for visualisation checks)
 *.fig
+.DS_Store
