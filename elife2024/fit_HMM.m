@@ -15,10 +15,12 @@ function HMM = fit_HMM(datadir, hmmdir, HMM_name, only_cov, only_1st, k)
 %    HMM_name: root name for HMMs to be recognised by kernel-builder
 %       functions
 %    only_cov: should be either 1 (to model states using only covariance) or 0
-%    (to use both mean and covariance) 
+%       (to use both mean and covariance) 
+%    only_1st: use only 1st scanning session? (1 to use only 1st, 0 to use
+%       all scanning sessions)
 %    k: number of HMM states
 % 
-% Output:
+% Output (will be written to hmmdir):
 %    HMM: trained HMM struct containing
 %       hmm: the estimated model (struct)
 %       Gamma: the state probability timecourses (timepoints x k)
@@ -29,15 +31,15 @@ function HMM = fit_HMM(datadir, hmmdir, HMM_name, only_cov, only_1st, k)
 %
 % Christine Ahrends, Aarhus University, 2022
 
-%% load data (X: timecourses, Y: behavioural variable to be predicted)
+%% Load data
 
-% load X
+% load timecourses
 if only_1st==0
     load([datadir '/tc1001_restall.mat']); % data_X
 elseif only_1st==1
     load([datadir '/tc1001_rest1.mat'])
 end
-% X are the timecourses that the HMM will be run on
+% data_X are the timecourses that the HMM will be run on
 % assuming here that timecourses are a subjects x 1 cell, each containing a
 % timepoints x ROIs matrix
 

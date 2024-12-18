@@ -1,5 +1,5 @@
-function HMM = fit_HMM_cv(HMM_name, leaveout_foldN, iterN, only_cov, k)
-% HMM = fit_HMM_cv(HMM_name, leaveout_foldN, only_cov, k)
+function HMM = fit_HMM_cv(datadir, kerneldir, hmmdir, HMM_name, leaveout_foldN, iterN, k)
+% HMM = fit_HMM_cv(datadir, kerneldir, hmmdir, HMM_name, leaveout_foldN, iterN, k)
 %
 % fit a group-level HMM to the HCP resting state fMRI data.
 % This uses a Gaussian observation model, either using the mean or pinning
@@ -11,17 +11,18 @@ function HMM = fit_HMM_cv(HMM_name, leaveout_foldN, iterN, only_cov, k)
 % HMM-MAR toolbox: https://github.com/OHBA-analysis/HMM-MAR
 % 
 % Input:
+%    datadir: directory where HCP rsfMRI timecourses are stored
+%    hmmdir: (output) directory to save the HMM
+%    kerneldir: directory containing pre-defined folds
 %    HMM_name: root name for HMMs to be recognised by kernel-builder
 %       functions
 %    leaveout_foldN: fold number used later for testing the model (leave
 %       out during HMM training)
 %    iterN: iteration number for folds (assuming folds were made using
 %       make_folds)
-%    only_cov: should be either 1 (to model states using only covariance) or 0
-%       (to use both mean and covariance) 
 %    k: number of HMM states
 % 
-% Output:
+% Output (will be written to hmmdir):
 %    HMM: trained HMM struct containing
 %       hmm: the estimated model (struct)
 %       Gamma: the state probability timecourses (timepoints x k)
@@ -32,57 +33,29 @@ function HMM = fit_HMM_cv(HMM_name, leaveout_foldN, iterN, only_cov, k)
 %
 % Christine Ahrends, University of Oxford, 2024
 
-%% Preparation
+%% Load data
 
-% set directories
-scriptdir = '/path/to/code';
-hmm_scriptdir = '/path/to/HMM-MAR-master';
-datadir = '/path/to/data';
-kerneldir = '/path/to/kernels'; % this should contain the pre-defined folds
-hmmdir = '/path/to/hmm';
-
-if ~isdir(hmmdir); mkdir(hmmdir); end
-
-addpath(scriptdir)
-addpath(genpath(hmm_scriptdir))
-
-%% load data (X: timecourses, Y: behavioural variable to be predicted)
-
-% load X
-load([datadir '/hcp1003_RESTall_LR_groupICA50.mat']);
-% X are the timecourses that the HMM will be run on
+% load timecourses
+load([datadir '/tc1001_restall.mat']); % data_X
+% data_X are the timecourses that the HMM will be run on
 % assuming here that timecourses are a subjects x 1 cell, each containing a
 % timepoints x ROIs matrix
 
-% load Y 
-% Y are the variables to be predicted
-% should be a subjects x variables matrix
-% here only used to get indices for subjects where at least one of the
-% behavioural variables is available
-
-all_vars = load([datadir '/vars.txt']);
-load([datadir '/headers_grouped_category.mat']) %headers of variables in all_vars
-load([datadir '/vars_target_with_IDs.mat'])
-int_vars = vars_target_with_IDs;
-clear vars_target_with_IDs
-target_ind = ismember(all_vars(:,1), int_vars(:,1)); % subject indices
-
 n_folds = 10;
-load([kerneldir '/HMM_folds.mat']) % load pre-defined folds
+load([kerneldir '/folds.mat']) % load pre-defined folds
 train_folds = folds{iterN}(1:end ~= leaveout_foldN);
 train_ind = [];
 for i = 1:(n_folds-1)
     train_ind = [train_ind, train_folds{i}];
 end
 
-data_X = data(train_ind);
-clear data all_vars headers_grouped_category int_vars
+data_train = data_X(train_ind);
 
-S = size(data_X,1);
-N = size(data_X{1},2);
-T = cell(size(data_X,1),1);
+S = size(data_train,1);
+N = size(data_train{1},2);
+T = cell(size(data_train,1),1);
 for s = 1:S
-    T{s} = size(data_X{s},1);
+    T{s} = size(data_train{s},1);
 end
 
 %% Fit HMM:
@@ -91,15 +64,16 @@ end
 hmm_options = struct();
 hmm_options.order = 0;
 hmm_options.covtype = 'full'; %('full' for covariance, 'uniquefull' for no covariance)
-hmm_options.zeromean = only_cov; % (0 to model mean, 1 to model only covariance)
+hmm_options.zeromean = 0; % (0 to model mean, 1 to model only covariance)
 hmm_options.standardise = 1; 
 hmm_options.dropstates = 0;
 hmm_options.K = k;
 hmm_options.useParallel = 0;
 
 % fit group-level HMM 
-[HMM.hmm, HMM.Gamma, HMM.Xi, HMM.vpath, ~, ~, HMM.fehist] = hmmmar(data_X, T, hmm_options);
+[HMM.hmm, HMM.Gamma, HMM.Xi, HMM.vpath, ~, ~, HMM.fehist] = hmmmar(data_train, T, hmm_options);
 
-save([hmmdir '/' HMM_name '_only_cov' num2str(only_cov) '_leaveout_foldN' num2str(leaveout_foldN) '_iterN' num2str(iterN) '.mat'], 'HMM')
+if ~isdir(hmmdir); mkdir(hmmdir); end
+save([hmmdir '/' HMM_name '_leaveoutfoldN' num2str(leaveout_foldN) '_iterN' num2str(iterN) '.mat'], 'HMM')
 
 end

@@ -1,9 +1,16 @@
 function [resultsT, featsets_resultsT, CV_resultsT] = collect_results(resultsdir, options)
-% [resultsT, featsets_resultsT, CV_resultsT] = collect_results()
+% [resultsT, featsets_resultsT, CV_resultsT] = collect_results(resultsdir, options)
 %
 % assemble results from all methods & runs into tables for stats testing &
 % figures
 % Tables are written out as csv
+%
+% Input:
+% resultsdir: (output) directory for results to be written
+% options: struct containing fields:
+%    + main: to assemble main results
+%    + featuresets: to assemble feature sets results
+%    + CV: to assemble HMM training scheme results
 %
 % Output (will be written to resultsdir):
 %    resultsT: table containing main results from all 14 methods
@@ -43,7 +50,7 @@ if isfield(options, 'main')
             shape = all_shapes{Kn};
             for varN = 1:nvars
                 for iterN = 1:niter
-                    load([resultsdir '/Results_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat']); % results
+                    load([resultsdir '/Results_' type '_' shape '_varN' num2str(varN) '_iterN' num2str(iterN) '.mat']); % results
                     for k = 1:nfolds
                         i = i+1;
                         resultsT.features{i} = type;
@@ -71,7 +78,7 @@ if isfield(options, 'main')
         type = all_types{Fn};
         for varN = 1:nvars
             for iterN = 1:niter
-                load([resultsdir '/Results_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat']); % results
+                load([resultsdir '/Results_' type '_' shape '_varN' num2str(varN) '_iterN' num2str(iterN) '.mat']); % results
                 for k = 1:nfolds
                     i = i+1;
                     resultsT.features{i} = type;
@@ -121,9 +128,9 @@ if isfield(options, 'featuresets')
                 for iterN = 1:niter
                     if FSn == 1
                         % for full runs, load main results
-                        load([resultsdir '/Results_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat']); % results
+                        load([resultsdir '/Results_' type '_' shape '_varN' num2str(varN) '_iterN' num2str(iterN) '.mat']); % results
                     else % reduced feature sets
-                        load([resultsdir '/Results_' featureset '_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat']); % results
+                        load([resultsdir '/Results_' featureset '_' type '_' shape '_varN' num2str(varN) '_iterN' num2str(iterN) '.mat']); % results
                     end
                     for k = 1:nfolds
                         i = i+1;
@@ -177,7 +184,7 @@ if isfield(options, 'CV')
             for CVn = 1:nschemes
                 CV = all_schemes{CVn};
                 for varN = 1:nvars
-                    load([resultsdir '/Results_' CV '_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat']); % results              
+                    load([resultsdir '/Results_' CV '_' type '_' shape '_varN' num2str(varN) '_iterN' num2str(iterN) '.mat']); % results              
                     for k = 1:nfolds
                         i = i+1;
                         CV_resultsT.features{i} = type;

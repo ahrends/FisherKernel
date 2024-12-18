@@ -19,7 +19,7 @@ function results = predict_static(datadir, kerneldir, resultsdir, varN, iterN, E
 %    Riem: in Riemannian space (use tangent space projection)? (1 for
 %    Riemannian, 0 for Euclidean)
 % 
-% Output:
+% Output (will be written to resultsdir):
 %    results: struct containing results
 %        kcorr: fold-level correlation between predicted and true Y in original space (1 x k vector)
 %        kcorr_deconf: "-" in deconfounded space
@@ -157,7 +157,7 @@ if ~exist([resultsdir '/Results_' type Riem_char '_' shape '_varN' num2str(varN)
     results.avcorr = corr(results.predictedY, Yin); % correlation coefficient in original space across folds
     results.avcorr_deconf = corr(results.predictedYD, results.YD); % correlation coefficient in deconfounded space across folds
 
-    save([resultsdir '/Results_' type Riem_char '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'results');
+    save([resultsdir '/Results_' type Riem_char '_' shape '_varN' num2str(varN) '_iterN' num2str(iterN) '.mat'], 'results');
 
 end
 end

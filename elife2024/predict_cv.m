@@ -1,5 +1,5 @@
-function results = predict_trainscheme(HMM_name,only_cov,varN,iterN,Fn,Kn,CVn)
-% results = predict_trainscheme(HMM_name,only_cov,varN,iterN,Fn,Kn,cv)
+function results = predict_cv(datadir, kerneldir, resultsdir, HMM_name, varN, iterN, Fn, Kn, CVn)
+% results = predict_cv(datadir, kerneldir, resultsdir, HMM_name, varN, iterN, Fn, Kn, CVn)
 % 
 % runs kernel ridge regression to predict behavioural variables (here age
 % and intelligence in HCP dataset) using different embeddings/kernels
@@ -10,9 +10,11 @@ function results = predict_trainscheme(HMM_name,only_cov,varN,iterN,Fn,Kn,CVn)
 % (split into small jobs for cluster)
 %
 % INPUT:
-%    HMM_name: file name for pre-trained HMM
-%    only_cov: use HMM where state means were estimated or pinned to 0 (1
-%       to use only covariance model, 0 to use covariance and mean)
+%    datadir: directory for HCP behavioural data and family structure
+%    kerneldir: directory where kernels and distance matrices, and 
+%       pre-constructed folds can be found
+%    resultsdir: (output) directory for prediction results
+%    HMM_name: root file name for pre-trained HMMs
 %    varN: variable number (1 for age, 2:35 for intelligence variables)
 %    iterN: iteration number (to load pre-defined folds)
 %    Fn: select embedding (1 for Fisher, 2 for naive, 3 for naive
@@ -21,7 +23,7 @@ function results = predict_trainscheme(HMM_name,only_cov,varN,iterN,Fn,Kn,CVn)
 %    cv: 1 to run on HMMs run only on training set, 0 to run on HMMs run on
 %       both training and test set
 %
-% OUTPUT:
+% OUTPUT (will be written to resultsdir):
 %    results: struct containing results
 %        kcorr: fold-level correlation between predicted and true Y in original space (1 x k vector)
 %        kcorr_deconf: "-" in deconfounded space
@@ -37,19 +39,8 @@ function results = predict_trainscheme(HMM_name,only_cov,varN,iterN,Fn,Kn,CVn)
 %
 % Christine Ahrends, University of Oxford 2024
 %
-%% Preparation
-
-% set directories
-scriptdir = '/path/to/code';
-hmmscriptdir = '/path/to/HMM-MAR-master';
-datadir = '/path/to/data'; % this should contain the behavioural data and family structure
-kerneldir = '/path/to/kernels'; % this should contain the built kernels or distance matrices and the pre-defined folds
-outputdir = '/path/to/results';
-
-addpath(scriptdir)
-addpath(genpath(hmmscriptdir))
-
-% load data (X, Y, confounds, family structure, and pre-defined CV folds)
+%% Load data
+% load X, Y, confounds, family structure, and pre-defined CV folds
 
 % load behavioural data Y and confounds
 all_vars = load([datadir '/vars.txt']);
@@ -77,7 +68,7 @@ twins = twins(index, index); % remove subjects with missing values from family s
 
 % load pre-defined folds for CV (here 100 repetitions of 10 folds)
 nfolds = 10;
-load([kerneldir '/HMMfolds.mat']) % folds that were used to train 10 separate HMMs (11th HMM is trained on all subjects)
+load([kerneldir '/folds.mat']) % folds that were used to train 10 separate HMMs (11th HMM is trained on all subjects)
 % IMPORTANT!! remove Nan subjects from folds and update the indices!!
 for jj = 1:numel(missing_subs)
     snan = missing_subs(jj);
@@ -100,8 +91,10 @@ elseif CVn==0
     cvstr = 'tog'; % separate subjects after training HMM
 end
 
-%%
-if ~exist([outputdir '/Results_' cvstr '_only_cov' num2str(only_cov) '_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'file')
+%% main prediction
+% make sure to only run this combination if it does not exist already (for
+% interrupted runs)
+if ~exist([resultsdir '/Results_' cvstr '_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'file')
 
     % initialise empty structures to hold results
     results = struct();
@@ -111,18 +104,18 @@ if ~exist([outputdir '/Results_' cvstr '_only_cov' num2str(only_cov) '_' type '_
     
     if CVn == 0 % if not doing cross-validated HMM kernel, simply load the full kernels (or distance matrices for Gaussian kernel)
         if strcmpi(shape, 'linear')
-            load([kerneldir '/Kernel_' HMM_name '_only_cov_' num2str(only_cov) '_' type '_' shape '.mat'], 'Kernel'); % load kernel
+            load([kerneldir '/Kernel_HMM_main_' type '_' shape '.mat'], 'Kernel'); % load kernel
         elseif strcmpi(shape, 'Gaussian')
-            load([kerneldir '/Kernel_' HMM_name '_only_cov_' num2str(only_cov) '_' type '_' shape '.mat'], 'D'); % load distance matrix
+            load([kerneldir '/Kernel_HMM_main_' type '_' shape '.mat'], 'D'); % load distance matrix
         end
     end
     
     for iii = 1:nfolds % fold-wise: if not doing cross-validated HMM kernel, start splitting into folds here for prediction, otherwise load separate kernels only here and then predict
         if CVn==1 % if doing cross-validated HMM kernel, load separate kernels for all 10 folds here:
             if strcmpi(shape, 'linear')
-                load([kerneldir '/Kernel_' HMM_name '_only_cov_' num2str(only_cov) '_leaveout_foldN' num2str(iii) '_' type '_' shape '.mat'], 'Kernel'); % load kernel
+                load([kerneldir '/Kernel_' HMM_name '_leaveoutfoldN' num2str(iii) '_iterN' num2str(iterN) '_' type '_' shape '.mat'], 'Kernel'); % load kernel
             elseif strcmpi(shape, 'Gaussian')
-                load([kerneldir '/Kernel_' HMM_name '_only_cov_' num2str(only_cov) '_leaveout_foldN' num2str(iii) '_' type '_' shape '.mat'], 'D'); % load distance matrix
+                load([kerneldir '/Kernel_' HMM_name '_leaveoutfoldN' num2str(iii) '_iterN' num2str(iterN) '_' type '_' shape '.mat'], 'D'); % load distance matrix
             end
         end
 
@@ -169,8 +162,8 @@ if ~exist([outputdir '/Results_' cvstr '_only_cov' num2str(only_cov) '_' type '_
     results.avcorr_deconf = corr(results.predictedYD, results.YD); % correlation coefficient in deconfounded space across folds
         
     % write results to outputdir    
-    if ~isdir(outputdir); mkdir(outputdir); end
-    save([outputdir '/Results_' cvstr '_only_cov' num2str(only_cov) '_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'results');
+    if ~isdir(resultsdir); mkdir(resultsdir); end
+    save([resultsdir '/Results_' cvstr '_' type '_' shape '_varN' num2str(varN) '_iterN' num2str(iterN) '.mat'], 'results');
     
 end
 end

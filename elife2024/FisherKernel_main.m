@@ -303,8 +303,61 @@ collect_results(resultsdir, results_options); % this will write a file called FE
 % Here only running jobs in real data, see SimulateCV_main.m for simulation
 % results
 
+% use first iteration of folds generated above to set training and test set
+
+% fit HMM only to training sets (this will fit 10 separate HMMs):
+HMM_name = 'HMM_cv';
+n_reps = 1; % do this only once
+n_folds = 10; % 10 folds
+k = 6;
+verbose = 1;
+
+for ii = 1:n_folds % leaving out one fold at a time from fitting HMM
+    if verbose
+        disp(['Now fitting HMM leaving out fold #' num2str(ii)]);
+    end
+    fit_HMM_cv(datadir, kerneldir, hmmdir, HMM_name, ii, 1, k); % only 1 iteration
+end
+
+% build kernels from HMMs fit only to training subjects
+types = {'Fisher', 'naive', 'naive normalised'};
+shapes = {'linear', 'Gaussian'};
+
+for Fn = 1:numel(types)
+    for Kn = 1:numel(shapes)
+        for ii = 1:n_folds
+            if verbose
+                disp(['Now building ' shapes{Kn} ' ' types{Fn} ' kernel for HMM trained leaving out fold #' ...
+                    num2str(ii) ' out of ' num2str(n_folds)]);
+            end
+            build_kernels_cv(datadir, hmmdir, kerneldir, HMM_name, ii, Fn, Kn, 1); % only 1 iteration
+        end
+    end
+end
+
+% predict individual traits from kernels constructed from HMMs fitted with
+% held-out folds
+training_schemes = {'together', 'separate'};
+iterN = 1; % only running 1 iteration here
+
+for CVn = 0:1
+    for Fn = 1:numel(types)
+        for Kn = 1:numel(shapes)
+            for varN = 1:n_vars
+                if verbose
+                    disp(['Now running KRR with ' shapes{Kn} ' ' types{Fn} ' kernel using HMM trained '
+                        training_schemes{CVn+1} ', for variable #' ...
+                        num2str(varN) ' out of ' num2str(n_vars) ' and iteration #' num2str(iterN) ...
+                        ' out of ' num2str(n_reps)]);
+                end
+                predict_cv(datadir, kerneldir, resultsdir, HMM_name, varN, iterN, Fn, Kn, CVn);
+            end
+        end
+    end
+end
+
 % assemble results
 results_options = struct();
 results_options.CV = true;
 
-collect_results(resultsdir, results_options);
+collect_results(resultsdir, results_options); % this will write a file called CVresultsT to resultsdir

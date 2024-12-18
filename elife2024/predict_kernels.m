@@ -156,7 +156,7 @@ if ~exist([resultsdir '/Results_' type '_' shape '_varN' num2str(varN) 'iterN' n
         
     % write results to outputdir
     if ~isdir(resultsdir); mkdir(resultsdir); end
-    save([resultsdir '/Results_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'results');
+    save([resultsdir '/Results_' type '_' shape '_varN' num2str(varN) '_iterN' num2str(iterN) '.mat'], 'results');
     
 end
 end

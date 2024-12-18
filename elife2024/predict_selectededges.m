@@ -13,7 +13,7 @@ function results = predict_selectededges(datadir, kerneldir, resultsdir, varN, i
 %    items)
 %    iterN: iteration number, used to load pre-defined folds
 % 
-% Output:
+% Output (will be written to resultsdir):
 %    results: struct containing results
 %        kcorr: fold-level correlation between predicted and true Y in original space (1 x k vector)
 %        kcorr_deconf: "-" in deconfounded space
@@ -228,6 +228,6 @@ results.avcorr_deconf = mean(results.kcorr_deconf);
 type = 'SelectedEdges';
 shape = 'linear';
 
-save([resultsdir '/Results_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'results')
+save([resultsdir '/Results_' type '_' shape '_varN' num2str(varN) '_iterN' num2str(iterN) '.mat'], 'results')
 
 end

@@ -151,7 +151,7 @@ if ~exist([resultsdir '/Results_' featureset '_' type '_' shape '_varN' num2str(
         
     % write results to outputdir    
     if ~isdir(resultsdir); mkdir(resultsdir); end
-    save([resultsdir '/Results_' featureset '_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'results');
+    save([resultsdir '/Results_' featureset '_' type '_' shape '_varN' num2str(varN) '_iterN' num2str(iterN) '.mat'], 'results');
     
 end
 end
