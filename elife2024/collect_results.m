@@ -5,7 +5,7 @@ function [resultsT, featsets_resultsT, CV_resultsT] = collect_results(resultsdir
 % figures
 % Tables are written out as csv
 %
-% Output:
+% Output (will be written to resultsdir):
 %    resultsT: table containing main results from all 14 methods
 %    featsets_resultsT: table containing results from runs comparing
 %        different feature sets (real data)

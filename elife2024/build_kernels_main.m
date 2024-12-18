@@ -14,7 +14,7 @@ function [Kernel, features, D] = build_kernels_main(datadir, hmmdir, kerneldir, 
 %        parameters across subjects)
 %    Kn: select kernel shape: 1 for linear, 2 for Gaussian
 % 
-% Output:
+% Output (will be written to kerneldir):
 %    Kernel: the samples x samples kernel
 %    features: the embedded features used to construct the kernel
 %    D: Distance matrix (only for Gaussian kernels)

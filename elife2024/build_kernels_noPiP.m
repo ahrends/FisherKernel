@@ -1,41 +1,32 @@
-function [Kernel, features, D] = build_kernels_noPiP(HMM_name, only_cov, Fn, Kn)
-% [Kernel, features, D] = build_kernels_noPiP(HMM_name, only_cov, Fn, Kn)
+function [Kernel, features, D] = build_kernels_noPiP(datadir, hmmdir, kerneldir, HMM_name, Fn, Kn)
+% [Kernel, features, D] = build_kernels_noPiP(datadir, hmmdir, kerneldir, HMM_name, Fn, Kn)
 % 
 % build kernels from HMMs using only state parameters (no transition
 % probabilities and initial state probabilities)
 % (wrapper for hmm_kernel)
 %
 % Input: 
+%    datadir: directory for HCP rsFMRI timecourses
+%    hmmdir: directory where pre-trained HMM can be found
+%    kerneldir: (output) directory where kernels and features will be saved
 %    HMM_name: file name of the HMM to be loaded
-%    only_cov: observation model - 1 to load HMM where mean was pinned to
-%       zero, 0 otherwise (main results)
 %    Fn: select embedding: 1 for gradient embedding (Fisher kernel), 
 %        2 for naive (no embedding), 3 for naive norm (normalised 
 %        parameters across subjects)
 %    Kn: select kernel shape: 1 for linear, 2 for Gaussian
 % 
-% Output:
+% Output (will be written to kerneldir):
 %    Kernel: the samples x samples kernel
 %    features: the embedded features used to construct the kernel
 %    D: Distance matrix (only for Gaussian kernels)
 %
 % Christine Ahrends, Aarhus University, 2022
 
-%% Preparation
-
-% set directories
-scriptdir = '/path/to/code';
-hmm_scriptdir = '/path/to/HMM-MAR-master';
-datadir = '/path/to/data'; % needs to contain timecourses for relevant subjects 
-hmmdir = '/path/to/hmm'; % needs to contain pre-trained HMM
-outputdir = '/path/to/kernels';
-
-addpath(scriptdir)
-addpath(genpath(hmm_scriptdir));
+%% Load data
 
 % load data (timecourses and pre-trained HMM)
 load([datadir '/tc1001_restall.mat']) % data_X
-load([hmmdir '/' HMM_name '_only_cov_' num2str(only_cov) '.mat']) % HMM
+load([hmmdir '/' HMM_name '.mat']) % HMM
 
 %% construct kernels and feature matrices from HMM
 
@@ -63,14 +54,14 @@ shapes = {'linear', 'Gaussian'};
 K_options.type = types{Fn}; % one of 'Fisher', 'naive', or 'naive_norm'
 K_options.shape = shapes{Kn};
 
-if ~isdir(outputdir); mkdir(outputdir); end
+if ~isdir(kerneldir); mkdir(kerneldir); end
 
 if Kn==2
     [Kernel, features, D] = hmm_kernel(data_X, HMM.hmm, K_options);
-    save([outputdir '/Kernel_noPiP_' HMM_name '_only_cov' num2str(only_cov) '_' types{Fn} '_' shapes{Kn} '.mat'], 'Kernel', 'features', 'D');
+    save([kerneldir '/Kernel_noPiP_' HMM_name '_' types{Fn} '_' shapes{Kn} '.mat'], 'Kernel', 'features', 'D');
 else
     [Kernel, features] = hmm_kernel(data_X, HMM.hmm, K_options);
-    save([outputdir '/Kernel_noPiP_' HMM_name '_only_cov' num2str(only_cov) '_' types{Fn} '_' shapes{Kn} '.mat'], 'Kernel', 'features');
+    save([kerneldir '/Kernel_noPiP_' HMM_name '_' types{Fn} '_' shapes{Kn} '.mat'], 'Kernel', 'features');
 end
 
 end

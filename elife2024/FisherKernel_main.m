@@ -232,7 +232,7 @@ for varN = 1:n_vars
     end
 end
 
-%% 4. load and evaluate predictions
+%% 4. assemble results
 % load all predictions and outcome measures, and assemble everything into a table
 
 results_options = struct();
@@ -241,12 +241,70 @@ results_options.main = true;
 collect_results(resultsdir, options); % this will write a table called MAINresultsT.csv into the results directory
 % export to do stats & figures in R
 
-%% Effect of feature sets (Results 2.3)
+%% Effect of feature subsets (Results 2.3)
 % Here only running jobs in real data, see SimulateFeatures_main.m for
 % simulation results
+% Folds are the same as the ones generated above
 
+HMM_name = 'HMM_main';
+types = {'Fisher', 'naive', 'naive normalised'};
 
+verbose = 1;
+
+% build kernels excluding state features:
+for Fn = 1:numel(types)
+    if verbose
+        disp(['Now building ' types{Fn} ' kernel excluding state features'])
+    end
+    build_kernels_nostates(datadir, hmmdir, kerneldir, HMM_name, Fn, 1);
+end
+
+% build kernels excluding transition features:
+for Fn = 1:numel(types)
+    if verbose
+        disp(['Now building ' types{Fn} ' kernel excluding transition features'])
+    end
+    build_kernels_noPiP(datadir, hmmdir, kerneldir, HMM_name, Fn, 1);
+end
+
+% build kernels with PCA-reduced state features:
+for Fn = 1:numel(types)
+    if verbose
+        disp(['Now building ' types{Fn} ' kernel with PCA-reduced state features'])
+    end
+    build_kernels_PCAstates(datadir, hmmdir, kerneldir, HMM_name, Fn, 1);
+end
+
+% predict from kernels with different feature subsets
+featsets = {'no transition features', 'no states', 'PCA-reduced states'};
+
+for Fn = 1:numel(types) % all kernels
+    for FSn = 1:numel(featsets) % all feature subsets
+        for varN = 1:n_vars % all target variables
+            for iterN = 1:n_reps % for 100 iterations
+                if verbose
+                    disp(['Now running KRR with ' featsets{FSn} ' ' types{Fn} ' kernel, for variable #' ...
+                        num2str(varN) ' out of ' num2str(n_vars) ' and iteration #' num2str(iterN) ...
+                        ' out of ' num2str(n_reps)]);
+                end
+                predict_featsets(datadir, kerneldir, resultsdir, HMM_name, varN, iterN, Fn, 1, FSn);
+            end
+        end
+    end
+end
+
+% assemble results
+results_options = struct();
+results_options.featuresets = true;
+
+collect_results(resultsdir, results_options); % this will write a file called FEATSETSresultsT.csv to resultsdir
 
 %% Effect of HMM training scheme (Results 2.4)
 % Here only running jobs in real data, see SimulateCV_main.m for simulation
 % results
+
+% assemble results
+results_options = struct();
+results_options.CV = true;
+
+collect_results(resultsdir, results_options);

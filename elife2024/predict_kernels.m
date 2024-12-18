@@ -21,7 +21,7 @@ function results = predict_kernels(datadir, kerneldir, resultsdir, HMM_name, var
 %    Kn: select shape of kernel (1 for linear, 2 for Gaussian)
 %       Note: For KL divergence and log-Euclidean use only Gaussian kernel
 %
-% OUTPUT:
+% OUTPUT (will be written to resultsdir):
 %    results: struct containing results
 %        kcorr: fold-level correlation between predicted and true Y in original space (1 x k vector)
 %        kcorr_deconf: "-" in deconfounded space

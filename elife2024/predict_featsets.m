@@ -1,18 +1,20 @@
-function results = predict_featsets(HMM_name, only_cov,varN,iterN,Fn,Kn,FSn)
-% results = predict_featsets_noPiP(HMM_name, only_cov,varN,iterN,Fn,Kn)
+function results = predict_featsets(datadir, kerneldir, resultsdir, HMM_name, varN, iterN, Fn, Kn, FSn)
+% results = predict_featsets(datadir, kerneldir, resultsdir, HMM_name, varN, iterN, Fn, Kn, FSn)
 %
 % runs kernel ridge regression to predict behavioural variables (here age
 % and intelligence in HCP dataset) using different embeddings/kernels
-% from HMM parameters as predictors. This function constructs kernels from
+% from HMM parameters as predictors. This function loads kernels of
 % different feature sets (only state features, only transition features, or
 % PCA-reduced state features).
 % wrapper for predictPhenotype_kernels_kfolds
 % (split into small jobs for cluster)
 %
 % INPUT:
+%    datadir: directory for HCP behavioural data and family structure
+%    kerneldir: directory where kernels and distance matrices, and 
+%       pre-constructed folds can be found
+%    resultsdir: (output) directory for prediction results
 %    HMM_name: file name for pre-trained HMM
-%    only_cov: use HMM where state means were estimated or pinned to 0 (1
-%       to use only covariance model, 0 to use covariance and mean)
 %    varN: variable number (1 for age, 2:35 for intelligence variables)
 %    iterN: iteration number (to load pre-defined folds)
 %    Fn: select embedding (1 for Fisher, 2 for naive, 3 for naive
@@ -21,7 +23,7 @@ function results = predict_featsets(HMM_name, only_cov,varN,iterN,Fn,Kn,FSn)
 %    FSn: select feature set (1 for no transition features, 2 for no state
 %       features, 3 for PCA-reduced state features)
 %
-% OUTPUT:
+% OUTPUT (will be written to resultsdir):
 %    results: struct containing results
 %        kcorr: fold-level correlation between predicted and true Y in original space (1 x k vector)
 %        kcorr_deconf: "-" in deconfounded space
@@ -37,19 +39,8 @@ function results = predict_featsets(HMM_name, only_cov,varN,iterN,Fn,Kn,FSn)
 %
 % Christine Ahrends, Aarhus University 2022
 %
-%% Preparation
-
-% set directories
-scriptdir = '/path/to/code';
-hmmscriptdir = '/path/to/HMM-MAR-master';
-datadir = '/path/to/data'; % this should contain the behavioural data and family structure
-kerneldir = '/path/to/kernels'; % this should contain the built kernels or distance matrices and the pre-defined folds
-outputdir = '/path/to/results';
-
-addpath(scriptdir)
-addpath(genpath(hmmscriptdir))
-
-% load data (X, Y, confounds, family structure, and pre-defined CV folds)
+%% Load data
+% load X, Y, confounds, family structure, and pre-defined CV folds
 
 % load behavioural data Y and confounds
 all_vars = load([datadir '/vars.txt']);
@@ -99,7 +90,7 @@ featureset = all_featsets{FSn};
 %% main prediction
 % make sure to only run this combination if it does not exist already (for
 % interrupted runs)
-if ~exist([outputdir '/Results_' featureset '_only_cov' num2str(only_cov) '_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'file')
+if ~exist([resultsdir '/Results_' featureset '_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'file')
     
     % initialise empty structures to hold results
     results = struct();
@@ -109,9 +100,9 @@ if ~exist([outputdir '/Results_' featureset '_only_cov' num2str(only_cov) '_' ty
     
     % load preconstructed kernels (for linear kernels)
     if strcmpi(shape, 'linear')
-        load([kerneldir '/Kernel_' featureset '_' HMM_name '_only_cov' num2str(only_cov) '_' type '_' shape '.mat'], 'Kernel'); % load kernel
+        load([kerneldir '/Kernel_' featureset '_' HMM_name '_' type '_' shape '.mat'], 'Kernel'); % load kernel
     elseif strcmpi(shape, 'Gaussian')
-        load([kerneldir '/Kernel_' featureset '_' HMM_name '_only_cov' num2str(only_cov) '_' type '_' shape '.mat'], 'D'); % load distance matrix
+        load([kerneldir '/Kernel_' featureset '_' HMM_name '_' type '_' shape '.mat'], 'D'); % load distance matrix
     end
 
     for iii = 1:nfolds 
@@ -159,8 +150,8 @@ if ~exist([outputdir '/Results_' featureset '_only_cov' num2str(only_cov) '_' ty
     results.avcorr_deconf = corr(results.predictedYD, results.YD); % correlation coefficient in deconfounded space across folds
         
     % write results to outputdir    
-    if ~isdir(outputdir); mkdir(outputdir); end
-    save([outputdir '/Results_' featureset '_only_cov' num2str(only_cov) '_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'results');
+    if ~isdir(resultsdir); mkdir(resultsdir); end
+    save([resultsdir '/Results_' featureset '_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'results');
     
 end
 end
