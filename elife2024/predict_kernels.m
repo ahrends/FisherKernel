@@ -1,16 +1,18 @@
-function results = predict_kernels(HMM_name, only_cov,varN,iterN,Fn,Kn)
-% results = predict_kernels(HMM_name, only_cov,varN,iterN,Fn,Kn)
+function results = predict_kernels(datadir, kerneldir, resultsdir, HMM_name, varN, iterN, Fn, Kn)
+% results = predict_kernels(datadir, kerneldir, resultsdir, HMM_name, varN, iterN, Fn, Kn)
 %
 % runs kernel ridge regression to predict behavioural variables (here age
 % and intelligence in HCP dataset) using different embeddings/kernels
-% from HMM parameters as predictors
+% from HMM parameters or static FC distance matrices as predictors (see Fn)
 % wrapper for predictPhenotype_kernels_kfolds
 % (split into small jobs for cluster)
 %
 % INPUT:
+%    datadir: directory for HCP behavioural data and family structure
+%    kerneldir: directory where kernels and distance matrices, and 
+%       pre-constructed folds can be found
+%    resultsdir: (output) directory for prediction results
 %    HMM_name: file name for pre-trained HMM
-%    only_cov: use HMM where state means were estimated or pinned to 0 (1
-%       to use only covariance model, 0 to use covariance and mean)
 %    varN: variable number (1 for age, 2:35 for intelligence variables)
 %    iterN: iteration number (to load pre-defined folds)
 %    Fn: select embedding (1 for Fisher, 2 for naive, 3 for naive
@@ -35,19 +37,8 @@ function results = predict_kernels(HMM_name, only_cov,varN,iterN,Fn,Kn)
 %
 % Christine Ahrends, Aarhus University 2022
 %
-%% Preparation
-
-% set directories
-scriptdir = '/path/to/code';
-hmmscriptdir = '/path/to/HMM-MAR-master';
-datadir = '/path/to/data'; % this should contain the behavioural data and family structure
-kerneldir = '/path/to/kernels'; % this should contain the built kernels or distance matrices and the pre-defined folds
-outputdir = '/path/to/results';
-
-addpath(scriptdir)
-addpath(genpath(hmmscriptdir))
-
-% load data (X, Y, confounds, family structure, and pre-defined CV folds)
+%% Load data
+% load X, Y, confounds, family structure, and pre-defined CV folds
 
 % load behavioural data Y and confounds
 all_vars = load([datadir '/vars.txt']);
@@ -95,7 +86,7 @@ shape = all_shapes{Kn};
 %% main prediction
 % make sure to only run this combination if it does not exist already (for
 % interrupted runs)
-if ~exist([outputdir '/Results_only_cov' num2str(only_cov) '_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'file')
+if ~exist([resultsdir '/Results_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'file')
     
     % initialise empty structures to hold results
     results = struct();
@@ -106,16 +97,16 @@ if ~exist([outputdir '/Results_only_cov' num2str(only_cov) '_' type '_' shape '_
     % load preconstructed kernels (for linear kernels) or
     % distance/divergence matrices (for Gaussian kernels)
     if strcmpi(type, 'KL') % load time-varying KL divergence divergence matrix
-        load([kerneldir '/Kernel_' HMM_name '_only_cov_' num2str(only_cov) '_KLdiv.mat'], 'D'); 
+        load([kerneldir '/Kernel_' HMM_name '_KLdiv.mat'], 'D'); 
     elseif strcmpi(type, 'KL_ta') % load time-averaged KL divergence matrix
         load([kerneldir '/Kernel_static_KLta.mat'])
     elseif strcmpi(type, 'Fro') % load log-Euclidean distance matrix
         load([kerneldir '/Kernel_static_Fro.mat']);
     else % main time-varying kernels
         if strcmpi(shape, 'linear')
-            load([kerneldir '/Kernel_' HMM_name '_only_cov_' num2str(only_cov) '_' type '_' shape '.mat'], 'Kernel'); % load kernel
+            load([kerneldir '/Kernel_' HMM_name '_' type '_' shape '.mat'], 'Kernel'); % load kernel
         elseif strcmpi(shape, 'Gaussian')
-            load([kerneldir '/Kernel_' HMM_name '_only_cov_' num2str(only_cov) '_' type '_' shape '.mat'], 'D'); % load distance matrix
+            load([kerneldir '/Kernel_' HMM_name '_' type '_' shape '.mat'], 'D'); % load distance matrix
         end
     end
     
@@ -164,8 +155,8 @@ if ~exist([outputdir '/Results_only_cov' num2str(only_cov) '_' type '_' shape '_
     results.avcorr_deconf = corr(results.predictedYD, results.YD); % correlation coefficient in deconfounded space across folds
         
     % write results to outputdir
-    if ~isdir(outputdir); mkdir(outputdir); end
-    save([outputdir '/Results_only_cov' num2str(only_cov) '_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'results');
+    if ~isdir(resultsdir); mkdir(resultsdir); end
+    save([resultsdir '/Results_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'results');
     
 end
 end

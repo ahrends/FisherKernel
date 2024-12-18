@@ -56,7 +56,7 @@ for i = 1:n_subs
     for s = 1:n_sess
         cov_tmp(:,:,s) = cov(tc_std{i,s}); % covariance per session
     end
-    FC_cov(:,:,i) = mean(cov_tmp,3); % each subject's covariance matrix is averaged across 4 sessions
+    FC_cov(:,:,i) = mean(cov_tmp,3); % each subject's covariance matrix is averaged across sessions
 end
 
 save([datadir '/FC_cov_groupICA50.mat'], 'FC_cov')

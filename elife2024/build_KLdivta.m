@@ -1,43 +1,43 @@
-function D = build_KLdivta(data, N, ts)
-% D = build_KLdivta(data, N, ts)
+function D = build_KLdivta(datadir, kerneldir, only_1st)
+% D = build_KLdivta(datadir, kerneldir, only_1st)
 %
 % build symmetrised KL divergence matrix based on time-averaged model (single-state HMM)
 % The divergence matrix will be used in Gaussian kernel for KRR in main
 % prediction function
 % 
+% Dependencies:
+% HMM-MAR toolbox: https://github.com/OHBA-analysis/HMM-MAR
+% 
 % Input:
-%    data: timecourses
-%    N: number of subjects
-%    ts: number of timepoints per subject (assuming here that this will be
-%    the same across subjects)
+%    datadir: directory for HCP rsFMRI timecourses
+%    kerneldir: (output) directory where kernels and features will be saved
+%    only_1st: whether to use only the first scanning session or all
 % 
 % Output:
 %    D: symmetrised KL divergence matrix (subjects x subjects)
 %
 % Christine Ahrends, University of Oxford, 2024
 
-%% Preparation
-% set directories
-scriptdir = '/path/to/code';
-hmm_scriptdir = '/path/to/HMM-MAR-master';
-datadir = '/path/to/data';
-outputdir = '/path/to/kernels';
+%% Load data
 
-addpath(scriptdir)
-addpath(genpath(hmm_scriptdir));
-
-% load data (timecourses for 1001 subjects for which at least one
-% behavioural variable is available
-
+% load timecourses and pre-trained HMM
+if only_1st==0
+    load([datadir '/tc1001_restall.mat']) % data_X
+elseif only_1st==1
+    load([datadir '/tc1001_rest1.mat'])
+end
 
 %% compute divergence matrix
 
-T = cell(N,1); % make cell containing the number of timepoints for each session (same as when fitting the HMM, to define borders)
-for n = 1:N
-    T{n} = ts;
+S = size(data_X,1); % number of subjects
+T = cell(S,1); % make cell containing the number of timepoints for each session (same as when fitting the HMM, to define borders)
+for s = 1:S
+    T{s} = size(data_X{s},1); 
 end
 
-D = computeDistMatrix_AVFC(data,T);
+D = computeDistMatrix_AVFC(data_X, T); % symmetrised KL divergence matrix
 
-save([outputdir '/Kernel_static_KLdiv.mat'], 'D')
+if ~isdir(kerneldir); mkdir(kerneldir); end
+save([kerneldir '/Kernel_static_KLdiv.mat'], 'D')
+
 end

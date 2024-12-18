@@ -1,11 +1,14 @@
-function results = predict_selectededges(varN, iterN)
-% results = predict_selectededges(varN, iterN)
+function results = predict_selectededges(datadir, kerneldir, resultsdir, varN, iterN)
+% results = predict_selectededges(datadir, kerneldir, resultsdir, varN, iterN)
 %
 % Selected Edges method for predicting from time-averaged FC matrices, as
 % described in Rosenberg et al. 2018 & Shen et al. 2018
 % main prediction part adapted from https://www.nitrc.org/projects/bioimagesuite/behavioralprediction.m
 %
 % Input:
+%    datadir: directory for HCP behavioural data and family structure
+%    kerneldir: directory containing pre-defined folds
+%    resultsdir: (output) directory for prediction results
 %    varN: variable number (here from 1:35, 1 being age, 2:34 cognitive
 %    items)
 %    iterN: iteration number, used to load pre-defined folds
@@ -26,16 +29,7 @@ function results = predict_selectededges(varN, iterN)
 % 
 % Christine Ahrends, Aarhus University, 2023
 
-%% Preparation
-% set directories
-scriptdir = '/path/to/scripts';
-datadir = '/path/to/data';
-addpath(genpath([scriptdir '/NetsPredict-master'])) % for consistency with other time-averaged FC analyses, use netspredict for util functions
-addpath(scriptdir)
-outputdir = '/path/to/results';
-
-% initialise empty struct to hold results
-results = struct(); 
+%% Load data
 
 % load behavioural data
 all_vars = load([datadir '/vars.txt']);
@@ -76,6 +70,10 @@ clear FC_cov
 
 %% Main: feature selection and regression
 
+if ~isdir(resultsdir); mkdir(resultsdir); end
+
+results = struct(); 
+
 thresh = 0.01; % threshold for feature selection
 
 % initialise some variables
@@ -88,7 +86,7 @@ YD = zeros(no_sub,1);
 % load pre-defined CV folds
 kfold = 10;
 nfolds = 10;
-load([maindir '/scripts/Kernel/revisions/kfolds.mat'])
+load([kerneldir '/folds.mat']) % folds
 % IMPORTANT!! remove Nan subjects from folds and update the indices!!
 for jj = 1:numel(missing_subs)
     snan = missing_subs(jj);
@@ -227,10 +225,9 @@ results.avcorr = mean(results.kcorr);
 results.avcorr_deconf = mean(results.kcorr_deconf);
 
 % naming results files for consistency with other methods:
-only_cov = 0;
-type = 'selectededges';
+type = 'SelectedEdges';
 shape = 'linear';
 
-save([outputdir '/Results_only_cov' num2str(only_cov) '_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'results')
+save([resultsdir '/Results_' type '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'results')
 
 end

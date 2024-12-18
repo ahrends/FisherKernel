@@ -1,5 +1,5 @@
-function results = predict_static(varN, iterN, EN, Riem)
-% results = predict_static(varN, iterN, EN, Riem)
+function results = predict_static(datadir, kerneldir, resultsdir, varN, iterN, EN, Riem)
+% results = predict_static(datadir, kerneldir, resultsdir, varN, iterN, EN, Riem)
 %
 % Prediction using (non-kernelised) static FC features with Ridge 
 % regression/Elastic Net. Output is fold-wise.
@@ -10,6 +10,9 @@ function results = predict_static(varN, iterN, EN, Riem)
 % covariancetoolbox - https://github.com/alexandrebarachant/covariancetoolbox
 % 
 % Input:
+%    datadir: directory for HCP behavioural data and family structure
+%    kerneldir: directory containing pre-defined folds
+%    resultsdir: (output) directory for prediction results
 %    varN: variable number (1 for age, 2:35 for intelligence variables)
 %    iterN: iteration number (to load pre-defined folds)
 %    EN: use Elastic Net? (1 for Elastic Net, 0 for ridge regression)
@@ -35,20 +38,6 @@ function results = predict_static(varN, iterN, EN, Riem)
 
 %% Preparation
 
-% set directories
-scriptdir = '/path/to/code';
-datadir = '/path/to/data'; % this should contain the behavioural data and pre-computed static covariance matrices
-npdir = '/path/to/NetsPredict-master';
-covdir = '/path/to/covariancetoolbox-master';
-kerneldir = '/path/to/kernels'; % should contain the pre-defined folds
-outputdir = '/path/to/results';
-
-addpath(scriptdir)
-addpath(genpath(npdir))
-addpath(genpath(covdir))
-
-if ~isdir(outputdir); mkdir(outputdir); end
-
 % set names for results files
 if EN==0
     type = 'statFC_RR';
@@ -62,12 +51,13 @@ elseif Riem==1
     Riem_char = 'Riem';
 end
 
-% just setting these for consistency with time-varying results
-only_cov = 0;
+% just setting this for consistency with time-varying results
 shape = 'linear';
 
+if ~isdir(resultsdir); mkdir(resultsdir); end
+
 % only run this combination if it does not exist yet (for interrupted runs)
-if ~exist([outputdir '/Results_only_cov' num2str(only_cov) '_' type Riem_char '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'file')
+if ~exist([resultsdir '/Results_' type Riem_char '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'file')
 
     nfolds = 10;
 
@@ -112,7 +102,6 @@ if ~exist([outputdir '/Results_only_cov' num2str(only_cov) '_' type Riem_char '_
     % run in Riemannian space, load the (3D) tensors
     if Riem==0
         load([datadir '/FC_cov_groupICA50.mat']); % FC_cov
-        FC_cov = FC_cov(:,:,target_ind);
         ind_all = find(index);
         for i = 1:numel(ind_all)
             Xin_tmp = triu(squeeze(FC_cov(:,:,ind_all(i))));
@@ -121,7 +110,6 @@ if ~exist([outputdir '/Results_only_cov' num2str(only_cov) '_' type Riem_char '_
         end
     elseif Riem==1
         load([datadir '/FC_cov_groupICA50.mat']);
-        FC_cov = FC_cov(:,:,target_ind);
         Xin_tmp = FC_cov(:,:,index);
         Xin = permute(Xin_tmp, [3, 1,2]); % subject x ROI x ROI
     end
@@ -169,7 +157,7 @@ if ~exist([outputdir '/Results_only_cov' num2str(only_cov) '_' type Riem_char '_
     results.avcorr = corr(results.predictedY, Yin); % correlation coefficient in original space across folds
     results.avcorr_deconf = corr(results.predictedYD, results.YD); % correlation coefficient in deconfounded space across folds
 
-    save([outputdir '/Results_only_cov' num2str(only_cov) '_' type Riem_char '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'results');
+    save([resultsdir '/Results_' type Riem_char '_' shape '_varN' num2str(varN) 'iterN' num2str(iterN) '.mat'], 'results');
 
 end
 end

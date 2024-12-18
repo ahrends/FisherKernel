@@ -1,36 +1,37 @@
-function D = build_KLdiv(HMM_name, only_cov)
-% D = build_KLdiv(HMM_name, only_cov)
+function D = build_KLdiv(datadir, hmmdir, kerneldir, HMM_name, only_1st)
+% D = build_KLdiv(datadir, hmmdir, kerneldir, HMM_name, only_1st)
 %
 % build symmetrised KL divergence matrix based on time-varying model (HMM)
 % This requires that the group-level HMM has been fitted to the
 % timecourses.
 % The divergence matrix will be used in Gaussian kernel for KRR in main
 % prediction function
+% 
+% Dependencies:
+% HMM-MAR toolbox: https://github.com/OHBA-analysis/HMM-MAR
 %
 % Input:
-%    HMM_name: Name of the file containing the trained HMM
+%    datadir: directory for HCP rsFMRI timecourses
+%    hmmdir: directory where pre-trained HMM can be found
+%    kerneldir: (output) directory where kernels and features will be saved
+%    HMM_name: file name of the HMM to be loaded
+%    only_1st: whether to use only the first scanning session or all
 % 
 % Output:
 %    D: symmetrised KL divergence matrix (subjects x subjects)
 %
 % Christine Ahrends, University of Oxford, 2024
 
-%% Preparation
+%% Load data
 
-% set directories
-scriptdir = '/path/to/code';
-hmm_scriptdir = '/path/to/HMM-MAR-master';
-datadir = '/path/to/data';
-hmmdir = '/path/to/hmm'; % needs to contain pre-trained group-level HMM
-outputdir = '/path/to/kernels';
+% load timecourses and pre-trained HMM
+if only_1st==0
+    load([datadir '/tc1001_restall.mat']) % data_X
+elseif only_1st==1
+    load([datadir '/tc1001_rest1.mat'])
+end
 
-addpath(scriptdir)
-addpath(genpath(hmm_scriptdir));
-
-% load data (timecourses for 1001 subjects for which at least one
-% behavioural variable is available
-load([datadir '/tc1001_restall.mat']) % data_X
-load([hmmdir '/' HMM_name '_only_cov_' num2str(only_cov) '.mat']) % HMM
+load([hmmdir '/' HMM_name '.mat']) % HMM
 
 %% compute divergence matrix
 
@@ -40,9 +41,9 @@ for s = 1:S
     T{s} = size(data_X{s},1); 
 end
 
-D = computeDistMatrix(data_X, T, HMM.hmm);
+D = computeDistMatrix(data_X, T, HMM.hmm); % symmetrised KL divergence matrix
 
-save([outputdir '/Kernel_' HMM_name '_only_cov_' num2str(only_cov) '_KLdiv.mat'], 'D');
-
+if ~isdir(kerneldir); mkdir(kerneldir); end
+save([kerneldir '/Kernel_' HMM_name '_KLdiv.mat'], 'D');
 
 end

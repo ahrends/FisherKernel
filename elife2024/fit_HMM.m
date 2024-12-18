@@ -1,5 +1,5 @@
-function HMM = fit_HMM(HMM_name, only_cov, k)
-% HMM = fit_HMM(only_cov, k)
+function HMM = fit_HMM(datadir, hmmdir, HMM_name, only_cov, only_1st, k)
+% HMM = fit_HMM(datadir, hmmdir, HMM_name, only_cov, only_1st, k)
 %
 % fit a group-level HMM to the HCP resting state fMRI data.
 % This uses a Gaussian observation model, either using the mean or pinning
@@ -10,6 +10,8 @@ function HMM = fit_HMM(HMM_name, only_cov, k)
 % HMM-MAR toolbox: https://github.com/OHBA-analysis/HMM-MAR
 % 
 % Input:
+%    datadir: directory where HCP rsfMRI timecourses are stored
+%    hmmdir: (output) directory to save the HMM
 %    HMM_name: root name for HMMs to be recognised by kernel-builder
 %       functions
 %    only_cov: should be either 1 (to model states using only covariance) or 0
@@ -27,42 +29,17 @@ function HMM = fit_HMM(HMM_name, only_cov, k)
 %
 % Christine Ahrends, Aarhus University, 2022
 
-%% Preparation
-
-% set directories
-scriptdir = '/path/to/code';
-hmm_scriptdir = '/path/to/HMM-MAR-master';
-datadir = '/path/to/data';
-hmmdir = '/path/to/hmm';
-
-if ~isdir(hmmdir); mkdir(hmmdir); end
-
-addpath(scriptdir)
-addpath(genpath(hmm_scriptdir))
-
 %% load data (X: timecourses, Y: behavioural variable to be predicted)
 
 % load X
-load([datadir '/hcp1003_RESTall_LR_groupICA50.mat']);
+if only_1st==0
+    load([datadir '/tc1001_restall.mat']); % data_X
+elseif only_1st==1
+    load([datadir '/tc1001_rest1.mat'])
+end
 % X are the timecourses that the HMM will be run on
 % assuming here that timecourses are a subjects x 1 cell, each containing a
 % timepoints x ROIs matrix
-
-% load Y 
-% Y are the variables to be predicted
-% should be a subjects x variables matrix
-% here only used to get indices for subjects where at least one of the
-% behavioural variables is available
-
-all_vars = load([datadir '/vars.txt']);
-load([datadir '/headers_grouped_category.mat']) %headers of variables in all_vars
-load([datadir '/vars_target_with_IDs.mat'])
-int_vars = vars_target_with_IDs;
-clear vars_target_with_IDs
-target_ind = ismember(all_vars(:,1), int_vars(:,1)); % subject indices
-
-data_X = data(target_ind); % remove subjects for which none of the behavioural variables are available
-clear data all_vars headers_grouped_category int_vars
 
 S = size(data_X,1);
 N = size(data_X{1},2);
@@ -86,6 +63,7 @@ hmm_options.useParallel = 0;
 % fit group-level HMM 
 [HMM.hmm, HMM.Gamma, HMM.Xi, HMM.vpath, ~, ~, HMM.fehist] = hmmmar(data_X, T, hmm_options);
 
-save([hmmdir '/' HMM_name '_only_cov' num2str(only_cov) '.mat'], 'HMM')
+if ~isdir(hmmdir); mkdir(hmmdir); end
+save([hmmdir '/' HMM_name '.mat'], 'HMM')
 
 end
