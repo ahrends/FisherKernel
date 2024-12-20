@@ -12,7 +12,7 @@
 % NetsPredict - https://github.com/vidaurre/NetsPredict
 % covariancetoolbox - https://github.com/alexandrebarachant/covariancetoolbox
 %
-% Christine Ahrends, Aarhus University 2022
+% Christine Ahrends, University of Oxford 2024
 
 %% NOTE
 % All functions are intended for a computing cluster. It is not 
@@ -360,4 +360,8 @@ end
 results_options = struct();
 results_options.CV = true;
 
-collect_results(resultsdir, results_options); % this will write a file called CVresultsT to resultsdir
+collect_results(resultsdir, results_options); % this will write a file called CVresultsT.csv to resultsdir
+
+%% Statistics and figures
+% All statistical comparisons and figures are done in R and can be found 
+% in StatsFigures.R
