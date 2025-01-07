@@ -1,4 +1,4 @@
-function [Kernel, features, corr_test] = predict_simcv(HMM_name, n_train, n_test, betwgroup_diff, Y_noise, cv)
+function [Kernel, features, corr_test] = predict_simcv(datadir, hmmdir, outputdir, HMM_name, n_train, n_test, betwgroup_diff, Y_noise, cv)
 % [Kernel, feat, corr_test] = predict_simcv(HMM_name, n_train, n_test, betwgroup_diff, Y_noise, cv)
 %
 % constructs kernels and predicts from HMMs run on simulated timecourses 
@@ -21,17 +21,7 @@ function [Kernel, features, corr_test] = predict_simcv(HMM_name, n_train, n_test
 %
 % Christine Ahrends, University of Oxford, 2024
 
-%% Preparation
-
-% set directories
-scriptdir = '/path/to/code';
-hmm_scriptdir = '/path/to/HMM-MAR-master';
-datadir = '/path/to/data'; % this should contain the simulated data (output from simulate_cv_generatetc)
-hmmdir = '/path/to/hmm'; % this should contain the HMM (HMM_name) fitted using fit_HMM_simcv
-outputdir = '/path/to/results';
-
-addpath(scriptdir)
-addpath(genpath(hmm_scriptdir))
+%% Load example data
 
 if cv==1
     cv_char = 'sep';

@@ -1,4 +1,4 @@
-function [X, Y_true] = simulate_cv_generatetc(HMM_name, n_train, n_test, betwgroup_diff, Y_noise)
+function [X, Y_true] = simulate_cv_generatetc(datadir, hmmdir, outputdir, HMM_name, n_train, n_test, betwgroup_diff, Y_noise)
 % [X, Y_true] = simulate_cv_generatetc(HMM_name, n_train, n_test, betwgroup_diff, Y_noise)
 %
 % simulate timecourses where the target variable is related to one HMM
@@ -30,17 +30,7 @@ function [X, Y_true] = simulate_cv_generatetc(HMM_name, n_train, n_test, betwgro
 %
 % Christine Ahrends, University of Oxford, 2024
 
-%% Preparation
-
-% set directories
-datadir = '/path/to/data'; % this should contain the timeseries (time x regions) for one example subject (synthetic timeseries are then modelled after the dimensions of this example subject)
-hmmdir = '/path/to/hmm'; % this should contain a trained HMM (HMM_name) used as a basis for the simulations
-scriptdir = '/path/to/code';
-hmm_scriptdir = '/path/to/HMM-MAR-master';
-outputdir = '/path/to/simtc';
-
-addpath(scriptdir)
-addpath(genpath(hmm_scriptdir))
+%% Load example data
 
 % load example subject and HMM
 load([datadir '/sub1.mat']) % sub1

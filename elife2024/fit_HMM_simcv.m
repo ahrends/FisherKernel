@@ -1,4 +1,4 @@
-function HMM = fit_HMM_simcv(HMM_name, n_train, n_test, betwgroup_diff, Y_noise, k, cv)
+function HMM = fit_HMM_simcv(datadir, hmmdir, HMM_name, n_train, n_test, betwgroup_diff, Y_noise, k, cv)
 % HMM = fit_HMM_simcv(n_train, n_test, betwgroup_diff, Y_noise, type)
 %
 % fit a group-level HMM to simulated timecourses using
@@ -33,18 +33,9 @@ function HMM = fit_HMM_simcv(HMM_name, n_train, n_test, betwgroup_diff, Y_noise,
 %
 % Christine Ahrends, University of Oxford, 2024
 
-%% Preparation
-
-% set directories
-scriptdir = '/path/to/code';
-hmm_scriptdir = '/path/to/HMM-MAR-master';
-datadir = '/path/to/data'; % this should contain the simulated data (output from simulate_cv_generatetc)
-hmmdir = '/path/to/hmm'; % output directory for this function
+%% Load example data
 
 if ~isdir(hmmdir); mkdir(hmmdir); end
-
-addpath(scriptdir)
-addpath(genpath(hmm_scriptdir))
 
 % load simulated data for these parameters:
 load([datadir '/X_ntrain' num2str(n_train) '_ntest' num2str(n_test) ...

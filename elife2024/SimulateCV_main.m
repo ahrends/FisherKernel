@@ -24,22 +24,22 @@
 %% Preparation
 
 % set directories
+codedir = '/path/to/code'; % directory for this folder
+hmm_codedir = '/path/to/HMM-MAR-master'; % directory for HMM-MAR toolbox 
 datadir = '/path/to/data'; % to store the simulated timecourses and target variables
 hmmdir = '/path/to/hmm'; % this should contain one example pre-trained HMM and will be used to store the fitted HMMs
-outputdir = '/path/to/results'; % to store the results
-scriptdir = '/path/to/code';
-hmm_scriptdir = '/path/to/HMM-MAR-master';
+resultsdir = '/path/to/results'; % to store the results
 
-addpath(scriptdir)
-addpath(genpath(hmm_scriptdir))
+addpath(codedir)
+addpath(genpath(hmm_codedir))
 
 %% Main simulations
 % generate timecourses and target variables, 
 % fit HMMs (only training subjects vs. all subjects),
 % construct kernels and predict target variable
 
-example_HMM = 'HMM_only_cov0';
-output_HMM = 'HMM_simcv';
+example_HMM = 'HMM_main';
+sim_HMM = 'HMM_simcv';
 k = 6;
 n_train = 50;
 n_test = 50;
@@ -48,10 +48,10 @@ Y_noise = 0.5:0.2:1.9;
 
 for i = 1:numel(betwgroup_diff)
     for j = 1:numel(Y_noise)
-        simulate_cv_generatetc(example_HMM, n_train, n_test, betwgroup_diff(i), Y_noise(j));
+        simulate_cv_generatetc(datadir, hmmdir, resultsdir, example_HMM, n_train, n_test, betwgroup_diff(i), Y_noise(j));
         for cv = 1:2
-            fit_HMM_simcv(output_HMM, n_train, n_test, betwgroup_diff(i), Y_noise(j), k, cv);
-            predict_simcv(output_HMM, n_train, n_test, betwgroup_diff(i), Y_noise(j), cv);
+            fit_HMM_simcv(datadir, hmmdir, sim_HMM, n_train, n_test, betwgroup_diff(i), Y_noise(j), k, cv);
+            predict_simcv(datadir, hmmdir, resultsdir, sim_HMM, n_train, n_test, betwgroup_diff(i), Y_noise(j), cv);
         end
     end
 end
@@ -66,7 +66,7 @@ n = 1;
 for ii = 1:numel(betwgroup_diff)
     for jj = 1:numel(Y_noise)
         for tt = 1:2
-            load([outputdir '/Results_' output_HMM '_' cv{tt} '_ntrain' ...
+            load([resultsdir '/Results_' sim_HMM '_' cv{tt} '_ntrain' ...
                 num2str(n_train) '_ntest' num2str(n_test) '_betwgroupdiff' ...
                 num2str(betwgroup_diff(ii)) '_Ynoise' num2str(Y_noise(jj)) '.mat']);            
             for kk = 1:3
