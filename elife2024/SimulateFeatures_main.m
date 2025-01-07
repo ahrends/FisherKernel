@@ -22,23 +22,31 @@
 %% Preparation
 
 % set directories
+codedir = '/path/to/FisherKernel'; % directory for this folder
+hmm_codedir = '/path/to/HMM-MAR-master'; % directory for HMM-MAR toolbox 
 hmmdir = '/path/to/hmm'; % this should contain a trained HMM (HMM_name) used as a basis for the simulations
-scriptdir = '/path/to/code';
-hmm_scriptdir = '/path/to/HMM-MAR-master';
+resultsdir = '/path/to/results'; % 
 
-addpath(scriptdir)
-addpath(genpath(hmm_scriptdir))
+addpath(codedir)
+addpath(genpath(hmm_codedir))
 
-HMM_name = 'HMM_only_cov0';
+%% Load pre-trained HMM
 
-% find threshold for simulations where group difference is in state means
-% to make sure that difference won't be captured as two different states
-% but rather subtle changes in one state:
+% load HMM from main text: Gaussian HMM where states have mean and
+% covariance run on all 4 scanning sessions per participant
+HMM_name = 'HMM_main';
+
 % load example HMM
 load([hmmdir '/' HMM_name '.mat']) % HMM
 
 hmm = HMM.hmm;
 K = hmm.K; % number of states in example HMM
+
+%% Set threshold for between-state differences
+
+% find threshold for simulations where group difference is in state means
+% to make sure that difference won't be captured as two different states
+% but rather subtle changes in one state:
 
 % get smallest distance between states in base HMM
 for k = 1:K
@@ -73,8 +81,7 @@ clear HMM hmm
 %% Simulate timecourses and test classification
 
 n_iter = 10; % do this 10 times for each scenario with randomly generated timecourses & random splits
-outputdir = '/path/to/results';
-if ~isdir(outputdir); mkdir(outputdir); end
+if ~isdir(resultsdir); mkdir(resultsdir); end
 
 % initialise empty arrays to hold results:
 err_statemeans = zeros(n_iter, 3);
@@ -95,13 +102,13 @@ n_subj = 200; % simulate 200 subjects (100 in each group)
 % recovering group difference across kernels and iterations
 betwgroup_diff = 0.2; % relatively subtle between-group difference to see some differences between methods (should be between 0 and threshold defined above)
 for i = 1:n_iter
-    [X, HMM, features, Kernel, err] = simulate_statemeans(HMM_name, n_subj, betwgroup_diff);
+    [X, HMM, features, Kernel, err] = simulate_statemeans(datadir, hmmdir, HMM_name, n_subj, betwgroup_diff);
     for kk=1:3
         err_statemeans(i,kk) = err(kk);
         feat_statemeans{i,kk} = features{kk};
         Kernel_statemeans{i,kk} = Kernel{kk};
     end
-    save([outputdir '/Sim_statemeans_nsubj' num2str(n_subj) '_groupdiff' num2str(betwgroup_diff) '_iterN' num2str(i) '.mat'], 'X', 'HMM', 'features', 'Kernel', 'err');
+    save([resultsdir '/Sim_statemeans_nsubj' num2str(n_subj) '_groupdiff' num2str(betwgroup_diff) '_iterN' num2str(i) '.mat'], 'X', 'HMM', 'features', 'Kernel', 'err');
     clear X HMM err features Kernel
 end
 
@@ -109,13 +116,13 @@ end
 % errors across kernels and iterations
 betwgroup_diff = 1; % relatively subtle difference (should be between 1 and 10)
 for i = 1:n_iter
-    [X, HMM, features, Kernel, err] = simulate_transprobs(HMM_name, n_subj, betwgroup_diff);
+    [X, HMM, features, Kernel, err] = simulate_transprobs(datadir, hmmdir, HMM_name, n_subj, betwgroup_diff);
     for kk=1:3
         err_transprobs(i,kk) = err(kk);
         feat_transprobs{i,kk} = features{kk};
         Kernel_transprobs{i,kk} = Kernel{kk};
     end
-    save([outputdir '/Sim_transprobs_nsubj' num2str(n_subj) '_groupdiff' num2str(betwgroup_diff) '_iterN' num2str(i) '.mat'], 'X', 'HMM', 'features', 'Kernel', 'err');
+    save([resultsdir '/Sim_transprobs_nsubj' num2str(n_subj) '_groupdiff' num2str(betwgroup_diff) '_iterN' num2str(i) '.mat'], 'X', 'HMM', 'features', 'Kernel', 'err');
     clear X HMM err features Kernel
 end
 
@@ -123,13 +130,13 @@ end
 % parameters when constructing the kernels
 betwgroup_diff = 1;
 for i = 1:n_iter
-    [X, HMM, features, Kernel, err] = simulate_transprobs_nostates(HMM_name, n_subj, betwgroup_diff);
+    [X, HMM, features, Kernel, err] = simulate_transprobs_nostates(datadir, hmmdir, HMM_name, n_subj, betwgroup_diff);
     for kk=1:3
         err_transprobs_nostates(i,kk) = err(kk);
         feat_transprobs_nostates{i,kk} = features{kk};
         Kernel_transprobs_nostates{i,kk} = Kernel{kk};
     end
-    save([outputdir '/Sim_transprobs_nostates_nsubj' num2str(n_subj) '_groupdiff' num2str(betwgroup_diff) '_iterN' num2str(i) '.mat'], 'X', 'HMM', 'features', 'Kernel', 'err');
+    save([resultsdir '/Sim_transprobs_nostates_nsubj' num2str(n_subj) '_groupdiff' num2str(betwgroup_diff) '_iterN' num2str(i) '.mat'], 'X', 'HMM', 'features', 'Kernel', 'err');
     clear X HMM err features Kernel
 end
 

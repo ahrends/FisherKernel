@@ -1,4 +1,4 @@
-function [X, HMM, features, Kernel, err] = simulate_transprobs_nostates(HMM_name, n_subj, betwgroup_diff)
+function [X, HMM, features, Kernel, err] = simulate_transprobs_nostates(datadir, hmmdir, HMM_name, n_subj, betwgroup_diff)
 % [X, HMM, features, Kernel, err] = simulate_transprobs_nostates(HMM_name, n_subj, betwgroup_diff)
 %
 % simulate timecourses for two groups where the group difference lies in
@@ -28,16 +28,7 @@ function [X, HMM, features, Kernel, err] = simulate_transprobs_nostates(HMM_name
 %
 % Christine Ahrends, Aarhus University, 2023
 
-%% Preparation
-
-% set directories
-datadir = '/path/to/data'; % this should contain the timeseries (time x regions) for one example subject (synthetic timeseries are then modelled after the dimensions of this example subject)
-hmmdir = '/path/to/hmm'; % this should contain a trained HMM (HMM_name) used as a basis for the simulations
-scriptdir = '/path/to/code';
-hmm_scriptdir = '/path/to/HMM-MAR-master';
-
-addpath(scriptdir)
-addpath(genpath(hmm_scriptdir))
+%% Load example data
 
 % load example subject and HMM
 load([datadir '/sub1.mat']) % sub1
