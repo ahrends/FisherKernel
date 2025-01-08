@@ -24,7 +24,7 @@
 %% Preparation
 
 % set directories
-codedir = '/path/to/code'; % directory for this folder
+codedir = '/path/to/FisherKernel'; % directory for this folder
 hmm_codedir = '/path/to/HMM-MAR'; % directory for HMM-MAR toolbox 
 datadir = '/path/to/example/data'; % this should contain one example subject's timeseries
 hmmdir = '/path/to/example/hmm'; % this should contain one example pre-trained HMM and will be used to store the fitted HMMs

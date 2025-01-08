@@ -3,7 +3,8 @@ function [X, HMM, features, Kernel, err] = simulate_transprobs(datadir, hmmdir, 
 %
 % simulate timecourses for two groups where the group difference lies in
 % the transition probabilities, then construct kernels, classify, and
-% calculate error in recovering the ground truth
+% calculate error in recovering the ground truth. Here done for an HMM with
+% K >= 6, but can be adapted to work with fewer states.
 %
 % Dependencies:
 % HMM-MAR toolbox: https://github.com/OHBA-analysis/HMM-MAR

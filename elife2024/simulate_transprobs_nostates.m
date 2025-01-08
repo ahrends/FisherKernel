@@ -3,7 +3,9 @@ function [X, HMM, features, Kernel, err] = simulate_transprobs_nostates(datadir,
 %
 % simulate timecourses for two groups where the group difference lies in
 % the transition probabilities, then construct kernels (**excluding** state
-% parameters), classify, and calculate error in recovering the ground truth
+% parameters), classify, and calculate error in recovering the ground
+% truth. Here done for an HMM with K >= 6, but can be adapted to work with 
+% fewer states.
 %
 % Dependencies:
 % HMM-MAR toolbox: https://github.com/OHBA-analysis/HMM-MAR

@@ -23,9 +23,11 @@
 
 % set directories
 codedir = '/path/to/FisherKernel'; % directory for this folder
-hmm_codedir = '/path/to/HMM-MAR-master'; % directory for HMM-MAR toolbox 
-hmmdir = '/path/to/hmm'; % this should contain a trained HMM (HMM_name) used as a basis for the simulations
-resultsdir = '/path/to/results'; % 
+hmm_codedir = '/path/to/HMM-MAR'; % directory for HMM-MAR toolbox 
+datadir = '/path/to/example/data'; % this should contain one example subject's timeseries
+hmmdir = '/path/to/example/hmm'; % this should contain a trained HMM (HMM_name) used as a basis for the simulations
+resultsdir = '/path/to/results'; % to store the results
+if ~isdir(resultsdir); mkdir(resultsdir); end
 
 addpath(codedir)
 addpath(genpath(hmm_codedir))
@@ -81,7 +83,6 @@ clear HMM hmm
 %% Simulate timecourses and test classification
 
 n_iter = 10; % do this 10 times for each scenario with randomly generated timecourses & random splits
-if ~isdir(resultsdir); mkdir(resultsdir); end
 
 % initialise empty arrays to hold results:
 err_statemeans = zeros(n_iter, 3);
@@ -180,11 +181,14 @@ for i = 1:n_iter
 end
 
 % Figure 4A (right): State means
+N1 = n_subj/2; % number of subjects simulated for group 1
+N2 = n_subj/2; % number of subjects simulated for group 2
+
 figure; 
 tiledlayout(3,3,'TileSpacing','loose','Padding','loose');
 % Naive kernel:
-nexttile([1,2]); plot(feat_statemeans{1,2}(1:100,:)', '.b', 'MarkerSize', 1); hold on; % features group 1
-plot(feat_statemeans{1,2}(101,:)', '.r', 'MarkerSize', 1); % features group 2
+nexttile([1,2]); plot(feat_statemeans{1,2}(1:N1,:)', '.b', 'MarkerSize', 1); hold on; % features group 1
+plot(feat_statemeans{1,2}(N1+1:end,:)', '.r', 'MarkerSize', 1); % features group 2
 xticks([1, 7, 43, 343]); xticklabels({''}); xlim([1,size(feat_statemeans{1,1},2)]);  % set ticks for different types of parameters
 yticklabels({''}); ylim([-7,7]);
 title('Naive features, group1 vs. group2'); 
@@ -193,8 +197,8 @@ nexttile; imagesc(Kernel0_statemeans{1,2}); % plot kernel
 xticklabels({''}); yticklabels({''}); colorbar('TickLabels', ''); axis square;
 title(['Naive kernel, error: ' num2str(err_statemeans(1,2))])
 % Naive norm. kernel:
-nexttile([1,2]); plot(feat_statemeans{1,3}(1:100,:)', '.b', 'MarkerSize', 1); hold on;
-plot(feat_statemeans{1,3}(101,:)', '.r', 'MarkerSize', 1); 
+nexttile([1,2]); plot(feat_statemeans{1,3}(1:N1,:)', '.b', 'MarkerSize', 1); hold on;
+plot(feat_statemeans{1,3}(N1+1:end,:)', '.r', 'MarkerSize', 1); 
 xticks([1, 7, 43, 343]); xticklabels({''}); xlim([1,size(feat_statemeans{1,1},2)]); 
 yticklabels({''}); ylim([-17,17]);
 title('Naive norm. features, group1 vs. group2'); 
@@ -203,8 +207,8 @@ nexttile; imagesc(Kernel0_statemeans{1,3});
 xticklabels({''}); yticklabels({''}); colorbar('TickLabels', ''); axis square;
 title(['Naive norm. kernel, error: ' num2str(err_statemeans(1,3))])
 % Fisher kernel:
-nexttile([1,2]); plot(feat_statemeans{1,1}(1:100,:)', '.b', 'MarkerSize', 1); hold on; 
-plot(feat_statemeans{1,1}(101,:)', '.r', 'MarkerSize', 1); 
+nexttile([1,2]); plot(feat_statemeans{1,1}(1:N1,:)', '.b', 'MarkerSize', 1); hold on; 
+plot(feat_statemeans{1,1}(N1+1:end,:)', '.r', 'MarkerSize', 1); 
 xticks([1, 7, 43, 343]); xticklabels({''}); xlim([1,size(feat_statemeans{1,1},2)]); 
 yticklabels({''}); ylim([-230,230]);
 title('Fisher scores, group1 vs. group2'); 
@@ -217,8 +221,8 @@ title(['Fisher kernel, error: ' num2str(err_statemeans(1,1))])
 figure; 
 tiledlayout(3,3,'TileSpacing','loose','Padding','loose');
 % Naive kernel:
-nexttile([1,2]); plot(feat_transprobs{1,2}(1:100,:)', '.b', 'MarkerSize', 1); hold on;
-plot(feat_transprobs{1,2}(101,:)', '.r', 'MarkerSize', 1); 
+nexttile([1,2]); plot(feat_transprobs{1,2}(1:N1,:)', '.b', 'MarkerSize', 1); hold on;
+plot(feat_transprobs{1,2}(N1+1:end,:)', '.r', 'MarkerSize', 1); 
 xticks([1, 7, 43, 343]); xticklabels({''}); xlim([1,size(feat_transprobs{1,1},2)]); 
 yticklabels({''}); ylim([-10,10]);
 title('Naive features, group 1 vs. group 2')
@@ -227,8 +231,8 @@ nexttile; imagesc(Kernel0_transprobs{1,2});
 xticklabels({''}); yticklabels({''}); colorbar('TickLabels', ''); axis square;
 title(['Naive kernel, error: ' num2str(err_transprobs(1,2))])
 % Naive norm. kernel:
-nexttile([1,2]); plot(feat_transprobs{1,3}(1:100,:)', '.b', 'MarkerSize', 1); hold on;
-plot(feat_transprobs{1,3}(101,:)', '.r', 'MarkerSize', 1); 
+nexttile([1,2]); plot(feat_transprobs{1,3}(1:N1,:)', '.b', 'MarkerSize', 1); hold on;
+plot(feat_transprobs{1,3}(N1+1:end,:)', '.r', 'MarkerSize', 1); 
 xticks([1, 7, 43, 343]); xticklabels({''}); xlim([1,size(feat_transprobs{1,1},2)]); 
 yticklabels({''}); ylim([-17,17]);
 title('Naive norm. features, group 1 vs. group 2')
@@ -237,12 +241,12 @@ nexttile; imagesc(Kernel0_transprobs{1,3});
 xticklabels({''}); yticklabels({''}); colorbar('TickLabels', ''); axis square;
 title(['Naive norm. kernel, error: ' num2str(err_transprobs(1,3))])
 % Fisher kernel:
-nexttile([1,2]); plot(feat_transprobs{1,1}(1:100,:)', '.b', 'MarkerSize', 1); hold on;
-plot(feat_transprobs{1,1}(101,:)', '.r', 'MarkerSize', 1); 
+nexttile([1,2]); plot(feat_transprobs{1,1}(1:N1,:)', '.b', 'MarkerSize', 1); hold on;
+plot(feat_transprobs{1,1}(N1+1:end,:)', '.r', 'MarkerSize', 1); 
 xticks([1, 7, 43, 343]); xticklabels({''}); xlim([1,size(feat_transprobs{1,1},2)]); 
 yticklabels({''}); ylim([-266,266]);
 title('Fisher scores, group1 vs. group2'); 
-holf off;
+hold off;
 nexttile; imagesc(Kernel0_transprobs{1,1}); 
 xticklabels({''}); yticklabels({''}); colorbar('TickLabels', ''); axis square;
 title(['Fisher kernel, error: ' num2str(err_transprobs(1,1))])
@@ -251,8 +255,8 @@ title(['Fisher kernel, error: ' num2str(err_transprobs(1,1))])
 figure; 
 tiledlayout(3,3,'TileSpacing','loose','Padding','loose');
 % Naive kernel:
-nexttile([1,2]); plot(feat_transprobs_nostates{1,2}(1:100,:)', '.b', 'MarkerSize', 1); hold on;
-plot(feat_transprobs_nostates{1,2}(101,:)', '.r', 'MarkerSize', 1); 
+nexttile([1,2]); plot(feat_transprobs_nostates{1,2}(1:N1,:)', '.b', 'MarkerSize', 1); hold on;
+plot(feat_transprobs_nostates{1,2}(N1+1:end,:)', '.r', 'MarkerSize', 1); 
 xticks([1, 7, 43, 343]); xticklabels({''}); xlim([1,size(feat_transprobs_nostates{1,1},2)]); 
 yticklabels({''}); ylim([-1,1]);
 title('Naive features, group 1 vs. group 2')
@@ -261,8 +265,8 @@ nexttile; imagesc(Kernel0_transprobs_nostates{1,2});
 xticklabels({''}); yticklabels({''}); colorbar('TickLabels', ''); axis square;
 title(['Naive kernel, error: ' num2str(err_transprobs_nostates(1,2))])
 % Naive norm. kernel:
-nexttile([1,2]); plot(feat_transprobs_nostates{1,3}(1:100,:)', '.b', 'MarkerSize', 1); hold on;
-plot(feat_transprobs_nostates{1,3}(101,:)', '.r', 'MarkerSize', 1); 
+nexttile([1,2]); plot(feat_transprobs_nostates{1,3}(1:N1,:)', '.b', 'MarkerSize', 1); hold on;
+plot(feat_transprobs_nostates{1,3}(N1+1:end,:)', '.r', 'MarkerSize', 1); 
 xticks([1, 7, 43, 343]); xticklabels({''}); xlim([1,size(feat_transprobs_nostates{1,1},2)]); 
 yticklabels({''}); ylim([-3,3]);
 title('Naive norm. features, group 1 vs. group 2')
@@ -271,8 +275,8 @@ nexttile; imagesc(Kernel0_transprobs_nostates{1,3});
 xticklabels({''}); yticklabels({''}); colorbar('TickLabels', ''); clim([20,100]); axis square;
 title(['Naive norm. kernel, error: ' num2str(err_transprobs_nostates(1,3))])
 % Fisher kernel:
-nexttile([1,2]); plot(feat_transprobs_nostates{1,1}(1:100,:)', '.b', 'MarkerSize', 1); hold on;
-plot(feat_transprobs_nostates{1,1}(101,:)', '.r', 'MarkerSize', 1); 
+nexttile([1,2]); plot(feat_transprobs_nostates{1,1}(1:N1,:)', '.b', 'MarkerSize', 1); hold on;
+plot(feat_transprobs_nostates{1,1}(N1+1:end,:)', '.r', 'MarkerSize', 1); 
 xticks([1, 7, 43, 343]); xticklabels({''}); xlim([1,size(feat_transprobs_nostates{1,1},2)]); 
 yticklabels({''}); ylim([-60,60]);
 title('Fisher scores, group 1 vs. group 2')
