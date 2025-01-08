@@ -79,7 +79,7 @@ elseif strcmp(cv_char, 'sep') % if fitting only to training subjects
     [HMM.hmm, HMM.Gamma, HMM.Xi, HMM.vpath] = hmmmar(X_train, T_train, hmm_options);
 end
 
-save([hmmdir '/' HMM_name '_' cv_char '_n_train' num2str(n_train) '_n_test' num2str(n_test) ...
-    '_betwgroup_diff' num2str(betwgroup_diff) '_Y_noise' num2str(Y_noise) '.mat'], "HMM");
+save([hmmdir '/' HMM_name '_' cv_char '_ntrain' num2str(n_train) '_ntest' num2str(n_test) ...
+    '_betwgroupdiff' num2str(betwgroup_diff) '_Ynoise' num2str(Y_noise) '.mat'], "HMM");
 
 end

@@ -25,10 +25,13 @@
 
 % set directories
 codedir = '/path/to/code'; % directory for this folder
-hmm_codedir = '/path/to/HMM-MAR-master'; % directory for HMM-MAR toolbox 
-datadir = '/path/to/data'; % to store the simulated timecourses and target variables
-hmmdir = '/path/to/hmm'; % this should contain one example pre-trained HMM and will be used to store the fitted HMMs
+hmm_codedir = '/path/to/HMM-MAR'; % directory for HMM-MAR toolbox 
+datadir = '/path/to/example/data'; % this should contain one example subject's timeseries
+hmmdir = '/path/to/example/hmm'; % this should contain one example pre-trained HMM and will be used to store the fitted HMMs
+tmpdir = '/path/to/tmpdata'; % will be used to store synthetic timecourses and targets
+if ~isdir(tmpdir); mkdir(tmpdir); end
 resultsdir = '/path/to/results'; % to store the results
+if ~isdir(resultsdir); mkdir(resultsdir); end
 
 addpath(codedir)
 addpath(genpath(hmm_codedir))
@@ -48,10 +51,10 @@ Y_noise = 0.5:0.2:1.9;
 
 for i = 1:numel(betwgroup_diff)
     for j = 1:numel(Y_noise)
-        simulate_cv_generatetc(datadir, hmmdir, resultsdir, example_HMM, n_train, n_test, betwgroup_diff(i), Y_noise(j));
+        simulate_cv_generatetc(datadir, hmmdir, tmpdir, example_HMM, n_train, n_test, betwgroup_diff(i), Y_noise(j));
         for cv = 1:2
-            fit_HMM_simcv(datadir, hmmdir, sim_HMM, n_train, n_test, betwgroup_diff(i), Y_noise(j), k, cv);
-            predict_simcv(datadir, hmmdir, resultsdir, sim_HMM, n_train, n_test, betwgroup_diff(i), Y_noise(j), cv);
+            fit_HMM_simcv(tmpdir, hmmdir, sim_HMM, n_train, n_test, betwgroup_diff(i), Y_noise(j), k, cv);
+            predict_simcv(tmpdir, hmmdir, resultsdir, sim_HMM, n_train, n_test, betwgroup_diff(i), Y_noise(j), cv);
         end
     end
 end

@@ -83,7 +83,7 @@ predictedY = cell(3,1);
 corr_test = zeros(3,1); 
 for kk = 1:3
     K_options.type = all_types{kk};
-    [Kernel{kk},features{kk}] = hmm_kernel(Xc, HMM_train.hmm, K_options); % construct kernel (Fisher, naive, naive normalised)
+    [Kernel{kk},features{kk}] = hmm_kernel(Xc, HMM.hmm, K_options); % construct kernel (Fisher, naive, naive normalised)
     
     Din = Kernel{kk};
     [predictedY{kk},~,~,~] = predictPhenotype(Yin,Din,krr_options); % run kernel ridge regression
