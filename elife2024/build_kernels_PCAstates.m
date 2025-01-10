@@ -42,10 +42,10 @@ K_options = struct();
 K_options.pca = true; % do PCA for state features
 K_options.Pi = true;
 K_options.P = true;
-if HMM_allsess.hmm.train.zeromean==0
-    K_options.mu = false; 
+if HMM.hmm.train.zeromean==0
+    K_options.mu = true; 
 else
-    K_options.mu = true;
+    K_options.mu = false;
 end
 K_options.sigma = true; 
 

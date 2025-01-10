@@ -40,10 +40,10 @@ load([hmmdir '/' HMM_name '.mat']) % HMM
 K_options = struct();
 K_options.Pi = false;
 K_options.P = false;
-if HMM_allsess.hmm.train.zeromean==0
-    K_options.mu = false; 
-else
+if HMM.hmm.train.zeromean==0
     K_options.mu = true; % if not using covariance only, use mean vectors for kernel
+else
+    K_options.mu = false; 
 end
 K_options.sigma = true; 
 

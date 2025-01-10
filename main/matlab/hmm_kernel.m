@@ -65,14 +65,14 @@ else
 end
 
 S = size(X_all,1);
-Kernel = hmm.K;
+K = hmm.K;
 N = hmm.train.ndim;
 if ~do_pca
-    feat = zeros(S, (options.Pi*Kernel + options.P*Kernel*Kernel + options.mu*Kernel*N + options.sigma*Kernel*N*N));
+    feat = zeros(S, (options.Pi*K + options.P*K*K + options.mu*K*N + options.sigma*K*N*N));
 else
-    feat_tmp = zeros(S, (options.Pi*Kernel + options.P*Kernel*Kernel + options.mu*Kernel*N + options.sigma*Kernel*N*N));
-    nPCs = options.Pi*Kernel + options.P*Kernel*Kernel;
-    feat = zeros(S, (options.Pi*Kernel + options.P*Kernel*Kernel + nPCs));
+    feat_tmp = zeros(S, (options.Pi*K + options.P*K*K + options.mu*K*N + options.sigma*K*N*N));
+    nPCs = options.Pi*K + options.P*K*K;
+    feat = zeros(S, (options.Pi*K + options.P*K*K + nPCs));
 end
 
 % get features (compute gradient if requested)
@@ -84,8 +84,8 @@ else
     for s = 1:S
         [~, feat_tmp(s,:)] = hmm_gradient(X_all{s}, hmm, options);
     end
-    [~, pcs] = pca(feat_tmp(:,options.Pi*Kernel + options.P*Kernel*Kernel+1:end), 'NumComponents', nPCs, 'Centered', false);
-    feat = [feat_tmp(:, 1:options.Pi*Kernel + options.P*Kernel*Kernel), pcs];
+    [~, pcs] = pca(feat_tmp(:,options.Pi*K + options.P*K*K+1:end), 'NumComponents', nPCs, 'Centered', false);
+    feat = [feat_tmp(:, 1:options.Pi*K + options.P*K*K), pcs];
 end
 %
 % NOTE: features will be in embedded space (e.g. embedded lags &

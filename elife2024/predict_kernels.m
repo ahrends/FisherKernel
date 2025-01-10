@@ -99,7 +99,7 @@ if ~exist([resultsdir '/Results_' type '_' shape '_varN' num2str(varN) 'iterN' n
     if strcmpi(type, 'KL') % load time-varying KL divergence divergence matrix
         load([kerneldir '/Kernel_' HMM_name '_KLdiv.mat'], 'D'); 
     elseif strcmpi(type, 'KL_ta') % load time-averaged KL divergence matrix
-        load([kerneldir '/Kernel_static_KLta.mat'])
+        load([kerneldir '/Kernel_static_KLdiv.mat'])
     elseif strcmpi(type, 'Fro') % load log-Euclidean distance matrix
         load([kerneldir '/Kernel_static_Fro.mat']);
     else % main time-varying kernels

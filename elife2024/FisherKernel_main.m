@@ -28,18 +28,22 @@
 % set directories and general variables, load data
 
 codedir = '/path/to/FisherKernel'; % directory for this folder
-hmm_codedir = '/path/to/HMM-MAR-master'; % directory for HMM-MAR toolbox 
+hmm_codedir = '/path/to/HMM-MAR'; % directory for HMM-MAR toolbox 
 netspredictdir = '/path/to/NetsPredict-master'; % directory for NetsPredict toolbox
-covariancedir = '/path/to/covariance-toolbox'; % directory for covariance-toolbox
+covariancedir = '/path/to/covariancetoolbox-master'; % directory for covariance-toolbox
 datadir = '/path/to/data'; % directory where HCP S1200 rsfMRI timecourses, behavioural/demographic variables, and family structure can be found
-hmmdir = '/path/to/hmm'; % directory where HMMs will be saved
+hmmdir = '/path/to/hmms'; % directory where HMMs will be saved
+if ~isdir(hmmdir); mkdir(hmmdir); end
 kerneldir = '/path/to/kernels'; % directory where kernels, features, & folds will be saved
+if ~isdir(kerneldir); mkdir(kerneldir); end
 resultsdir = '/path/to/results';
+if ~isdir(resultsdir); mkdir(resultsdir); end
 
 addpath(genpath(codedir))
 addpath(genpath(hmm_codedir))
 addpath(genpath(netspredictdir))
 addpath(genpath(covariancedir))
+rmpath(genpath([hmm_codedir '/utils/prediction'])) % use file versions from this repo to reproduce paper results rather than toolbox version
 
 %% 0a. Check data availability
 % load Y: variables to be predicted and confounds
@@ -59,7 +63,7 @@ make_HCPfamilystructure;
 Y = [age(target_ind),int_vars(:,2:end)];
 
 % load X: timecourses (here called 'data') that the HMM should be run on
-load([datadir '/tcs/hcp1003_RESTall_LR_groupICA50.mat']);
+load([datadir '/hcp1003_RESTall_LR_groupICA50.mat']);
 % assuming here that timecourses are a subjects x 1 cell, each containing a
 % timepoints x ROIs matrix
 
@@ -77,7 +81,7 @@ end
 % (Other versions for Supplementary Information)
 % SI version 1: only first scanning session of each participant:
 clear data_X T
-load([datadir '/tcs/hcp1003_REST1_LR_groupICA50.mat']);
+load([datadir '/hcp1003_REST1_LR_groupICA50.mat']);
 data_X = data(target_ind);
 T = cell(size(data_X,1),1); % cell containing no. of timepoints for each subject
 for s = 1:S
@@ -238,7 +242,7 @@ end
 results_options = struct();
 results_options.main = true;
 
-collect_results(resultsdir, options); % this will write a table called MAINresultsT.csv into the results directory
+collect_results(resultsdir, results_options); % this will write a table called MAINresultsT.csv into the results directory
 % export to do stats & figures in R
 
 %% Effect of feature subsets (Results 2.3)
@@ -345,7 +349,7 @@ for CVn = 0:1
         for Kn = 1:numel(shapes)
             for varN = 1:n_vars
                 if verbose
-                    disp(['Now running KRR with ' shapes{Kn} ' ' types{Fn} ' kernel using HMM trained '
+                    disp(['Now running KRR with ' shapes{Kn} ' ' types{Fn} ' kernel using HMM trained ' ...
                         training_schemes{CVn+1} ', for variable #' ...
                         num2str(varN) ' out of ' num2str(n_vars) ' and iteration #' num2str(iterN) ...
                         ' out of ' num2str(n_reps)]);

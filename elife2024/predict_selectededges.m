@@ -63,7 +63,6 @@ cs=twins(index,index); % remove missing subjects from family structure
 
 % load time-averaged FC matrices
 load([datadir '/FC_cov_groupICA50.mat']); % load covariance matrices for 1,003 subjects
-FC_cov = FC_cov(:,:,target_ind); % remove subjects for which all behavioural variables are missing
 all_mats = FC_cov(:,:,index); % remove subjects for which current target variable is missing
 clear FC_cov
 
@@ -145,7 +144,7 @@ for i = 1:kfold
     train_sumpos = zeros(no_sub-numel(folds{iterN}{i}),1);
     train_sumneg = zeros(no_sub-numel(folds{iterN}{i}),1);
     
-    for ss = 1:size(train_sumpos)
+    for ss = 1:size(train_sumpos,1)
         train_sumpos(ss) = sum(sum(train_mats(:,:,ss).*pos_mask))/2;
         train_sumneg(ss) = sum(sum(train_mats(:,:,ss).*neg_mask))/2;
     end

@@ -20,7 +20,7 @@ function D = build_KLdivta(datadir, kerneldir, only_1st)
 
 %% Load data
 
-% load timecourses and pre-trained HMM
+% load timecourses
 if only_1st==0
     load([datadir '/tc1001_restall.mat']) % data_X
 elseif only_1st==1

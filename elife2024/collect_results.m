@@ -1,5 +1,5 @@
-function [resultsT, featsets_resultsT, CV_resultsT] = collect_results(resultsdir, options)
-% [resultsT, featsets_resultsT, CV_resultsT] = collect_results(resultsdir, options)
+function [agg_table] = collect_results(resultsdir, options)
+% [agg_table] = collect_results(resultsdir, options)
 %
 % assemble results from all methods & runs into tables for stats testing &
 % figures
@@ -13,18 +13,19 @@ function [resultsT, featsets_resultsT, CV_resultsT] = collect_results(resultsdir
 %    + CV: to assemble HMM training scheme results
 %
 % Output (will be written to resultsdir):
-%    resultsT: table containing main results from all 14 methods
-%    featsets_resultsT: table containing results from runs comparing
-%        different feature sets (real data)
-%    CV_resultsT: table containing results from runs comparing HMM training
-%        schemes (training HMM on all subjects vs. only training set)
+%    agg_table: struct containing:
+%       resultsT: table containing main results from all 14 methods
+%       featsets_resultsT: table containing results from runs comparing
+%           different feature sets (real data)
+%       CV_resultsT: table containing results from runs comparing HMM training
+%           schemes (training HMM on all subjects vs. only training set)
 %
 % Christine Ahrends, University of Oxford, 2024
 
 %% Main results:
 % load data from all runs into a table
 
-if isfield(options, 'main')
+if isfield(options, 'main') && options.main
     
     all_types = {'Fisher', 'naive', 'naive_norm', 'KL', 'KL_ta', 'Fro', 'statFC_RR', 'statFC_RRRiem', 'statFC_EN', 'statFC_ENRiem', 'SelectedEdges'};
     all_shapes = {'linear', 'Gaussian'};
@@ -53,8 +54,8 @@ if isfield(options, 'main')
                     load([resultsdir '/Results_' type '_' shape '_varN' num2str(varN) '_iterN' num2str(iterN) '.mat']); % results
                     for k = 1:nfolds
                         i = i+1;
-                        resultsT.features{i} = type;
-                        resultsT.kernel{i} = shape;
+                        resultsT.type{i} = type;
+                        resultsT.shape{i} = shape;
                         resultsT.varN(i) = varN;
                         resultsT.iterN(i) = iterN;
                         resultsT.foldN(i) = k;
@@ -81,8 +82,8 @@ if isfield(options, 'main')
                 load([resultsdir '/Results_' type '_' shape '_varN' num2str(varN) '_iterN' num2str(iterN) '.mat']); % results
                 for k = 1:nfolds
                     i = i+1;
-                    resultsT.features{i} = type;
-                    resultsT.kernel{i} = shape;
+                    resultsT.type{i} = type;
+                    resultsT.shape{i} = shape;
                     resultsT.varN(i) = varN;
                     resultsT.iterN(i) = iterN;
                     resultsT.foldN(i) = k;
@@ -102,11 +103,14 @@ end
 
 %% Results feature sets:
 
-if isfield(options, 'featuresets')
+if isfield(options, 'featuresets') && options.featuresets
 
     all_types = {'Fisher', 'naive', 'naive_norm'};
     all_featsets = {'full', 'noPiP', 'nostates', 'PCAstates'};
     
+    nvars = 35;
+    niter = 100;
+    nfolds = 10;
     nmethods = numel(all_types);
     nfeatsets = numel(all_featsets);
     
@@ -115,7 +119,7 @@ if isfield(options, 'featuresets')
     featsets_resultsT = table(cell(nrows,1), cell(nrows,1), cell(nrows,1), zeros(nrows,1), ...
         zeros(nrows,1), zeros(nrows,1), zeros(nrows,1), zeros(nrows,1), ...
         zeros(nrows,1), zeros(nrows,1), zeros(nrows,1), zeros(nrows,1), ...
-        'VariableNames', {'features', 'kernel', 'featureset', 'varN', 'iterN', 'foldN', ...
+        'VariableNames', {'type', 'shape', 'featureset', 'varN', 'iterN', 'foldN', ...
         'kcorr', 'kcorr_deconf', 'kcod', 'kcod_deconf', 'knmae', 'knmae_deconf'});
     
     i = 0;
@@ -134,8 +138,8 @@ if isfield(options, 'featuresets')
                     end
                     for k = 1:nfolds
                         i = i+1;
-                        featsets_resultsT.features{i} = type;
-                        featsets_resultsT.kernel{i} = shape;
+                        featsets_resultsT.type{i} = type;
+                        featsets_resultsT.shape{i} = shape;
                         featsets_resultsT.featureset{i} = featureset;
                         featsets_resultsT.varN(i) = varN;
                         featsets_resultsT.iterN(i) = iterN;
@@ -157,22 +161,24 @@ end
 
 %% Results training scheme:
 % training HMM together vs. separate:
-if isfield(options, 'CV')
+if isfield(options, 'CV') && options.CV
 
     all_types = {'Fisher', 'naive', 'naive_norm'};
     all_schemes = {'tog', 'sep'};
     all_shapes = {'linear', 'Gaussian'};
     
+    nvars = 35;
+    nfolds = 10;
     nmethods = numel(all_types);
     nschemes = numel(all_schemes);
     nkernels = numel(all_shapes);
     
-    nrows=nmethods*nschems*nkernels*nvars*nfolds; % doing this only for one iteration (rather than 100 as above) because of HMM training cost
+    nrows=nmethods*nschemes*nkernels*nvars*nfolds; % doing this only for one iteration (rather than 100 as above) because of HMM training cost
     
     CV_resultsT = table(cell(nrows,1), cell(nrows,1), cell(nrows,1), zeros(nrows,1), ...
         zeros(nrows,1), zeros(nrows,1), zeros(nrows,1), zeros(nrows,1), ...
         zeros(nrows,1), zeros(nrows,1), zeros(nrows,1), zeros(nrows,1), ...
-        'VariableNames', {'features', 'kernel', 'training', 'varN', 'iterN', 'foldN', ...
+        'VariableNames', {'type', 'shape', 'training', 'varN', 'iterN', 'foldN', ...
         'kcorr', 'kcorr_deconf', 'kcod', 'kcod_deconf', 'knmae', 'knmae_deconf'});
     
     i = 0;
@@ -187,8 +193,8 @@ if isfield(options, 'CV')
                     load([resultsdir '/Results_' CV '_' type '_' shape '_varN' num2str(varN) '_iterN' num2str(iterN) '.mat']); % results              
                     for k = 1:nfolds
                         i = i+1;
-                        CV_resultsT.features{i} = type;
-                        CV_resultsT.kernel{i} = shape;
+                        CV_resultsT.type{i} = type;
+                        CV_resultsT.shape{i} = shape;
                         CV_resultsT.training{i} = CV;
                         CV_resultsT.varN(i) = varN;
                         CV_resultsT.iterN(i) = iterN;
@@ -205,7 +211,18 @@ if isfield(options, 'CV')
         end
     end
     
-    writetable(CV_resultsT, [outputdirdir '/CVresultsT.csv'])
+    writetable(CV_resultsT, [resultsdir '/CVresultsT.csv'])
+end
+
+agg_table = struct();
+if isfield(options, 'main') && options.main
+    agg_table.main = resultsT;
+end
+if isfield(options, 'featuresets') && options.featuresets
+    agg_table.featuresets = featsets_resultsT;
+end
+if isfield(options, 'CV') && options.CV
+    agg_table.CV = CV_resultsT;
 end
 
 end
