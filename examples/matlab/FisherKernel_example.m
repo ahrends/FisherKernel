@@ -163,8 +163,7 @@ krr_params.CVscheme = [10 10]; % number of outer and inner folds for nested CV
 krr_params.alpha = [0.0001 0.001 0.01 0.1 0.3 0.5 0.7 0.9 1.0]; % ridge penalty (vector for grid search)
 krr_params.verbose = 1;
 krr_params.Nperm = 1; 
-krr_params.shape = 'linear'; % either 'Gaussian' or 'linear';
-krr_params.leaveout_foldN = 1;
+krr_params.shape = 'linear'; % either 'gaussian' or 'linear';
 
 rng('shuffle')
 % load predictors: 
@@ -173,7 +172,7 @@ rng('shuffle')
 % tau (width of Gaussian kernel) within inner CV
 if strcmpi(krr_params.shape, 'linear')
     Din = FK;
-elseif strcmpi(krr_params.shape, 'Gaussian')
+elseif strcmpi(krr_params.shape, 'gaussian')
     Din = Dist;
 end
 
