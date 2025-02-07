@@ -14,12 +14,14 @@ NOTE: Main Fisher kernel and prediction functionality is included in the HMM-MAR
 
 ## Quick start
 
-In Python, install the GLHMM toolbox in your environment:
+**Python**: 
+
+Install the GLHMM toolbox in your environment:
 ```
 pip install glhmm
 ```
 
-Then fit an HMM and construct the Fisher kernel from it:
+Then fit an HMM and predict from it using the Fisher kernel:
 ```python
 from glhmm import glhmm, prediction
 
@@ -31,21 +33,62 @@ hmm.train(X=None, Y=timeseries, indices=T) # where timeseries are a numpy array 
 options = {}
 options['nfolds'] = 10 # number of folds for inner & outer CV loops
 options['shape'] = 'linear'
+options['incl_Pi'] = True # include initial state probabilities
+options['incl_P' = True # include transition probabilities
 options['incl_Mu'] = True # include state means
 options['incl_Sigma'] = True # include state covariances
-# the initial state probabilities and the transition probabilities
-# are used by default, but can be excluded by setting options['incl_Pi']
-# and options['incl_P'], respectively, to False
+
 # use HMM trained/loaded above and standardised timeseries to predict subjects' age:
 results = prediction.predict_phenotype(hmm, timeseries, behav, T, predictor='Fisherkernel', estimator='KernelRidge', options=options)
 # results['behav_pred'] contains the predicted variable
+```
+
+**Matlab**:
+
+Download the [HMM-MAR toolbox](https://github.com/OHBA-analysis/HMM-MAR/) and add the path:
+
+```matlab
+addpath(genpath('/path/to/HMM-MAR-master'))
+```
+
+Then fit an HMM, construct the Fisher kernel and use it for prediction:
+```matlab
+% fit Gaussian HMM with mean and covariance with 4 states
+hmm_options = struct();
+hmm_options.order = 0;
+hmm_options.covtype = 'full';
+hmm_options.zeromean = 0;
+hmm_options.standardise = 1;
+hmm_options.K = 4;
+
+hmm = hmmmar(timeseries, T, hmm_options);
+
+% construct linear Fisher kernel
+kernel_options = struct();
+kernel_options.Pi = true; % include initial state probabilities
+kernel_options.P = true; % include transition probabilities
+kernel_options.mu = true; % include state means
+kernel_options.sigma = true; % include state covariances
+kernel_options.type = 'Fisher';
+kernel_options.shape = 'linear';
+
+FK = hmm_kernel(timeseries, hmm, kernel_options);
+
+% kernel ridge regression
+krr_options = struct();
+krr_options.deconfounding = 0;
+krr_options.CVscheme = [10 10];
+krr_options.Nperm = 1;
+krr_options.shape = 'linear';
+
+[predictedY, ~, ~, stats] = predictPhenotype(behav, FK, krr_options);
 ```
 
 ## Repository overview
 
 *./elife2024 contains all functions and scripts to replicate the paper using the HCP resting-state fMRI data.
 
-*./examples contains examples in Matlab and Python (coming soon). Examples include Fisher kernel for Gaussian and TDE-HMM in different regression/classification problems.
+*./examples contains examples in Matlab and Python. Examples include Fisher kernel for Gaussian and TDE-HMM in different regression/classification problems.
 
 *./main contains main functions for Fisher Kernel: hmm_kernel.m constructs a kernel (e.g. Fisher kernel) and the corresponding feature matrix from an HMM, hmm_gradient.m only computes the feature matrix (e.g. Fisher score/gradient).
 
@@ -53,7 +96,7 @@ results = prediction.predict_phenotype(hmm, timeseries, behav, T, predictor='Fis
 
    *./main/prediction contains functions for kernel regression, for now predictPhenotype_kernels.m and krr_predict_FK.m, both run kernel ridge regression using output from hmm_kernel. cvfolds_FK.m is used for randomised cross validation, optionally accounting for family structure. predictPhenotype_kernels.m and predictPhenotypes_kernels_kfolds.m (the fold-level equivalent of predictPhenotype_kernels.m) also use deconfounding.
 
-## Reference
+## Reference
 
 If you use this repository, please cite:
 Ahrends, Woolrich, & Vidaurre (2024) Predicting individual traits from models of brain dynamics accurately and reliably using the Fisher kernel. elife. doi: https://doi.org/10.7554/eLife.95125 
